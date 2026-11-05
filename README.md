@@ -26,6 +26,8 @@ Uma falha no envio aparece no log do Render e não impede a inscrição.
 
 ## Regras
 - Valor: cada grupo de 3 participantes custa R$ 1.000,00; quem sobra paga R$ 400,00 por pessoa (1 = 400, 2 = 800, 3 = 1.000, 4 = 1.400, 5 = 1.800, 6 = 2.000). Sem limite por órgão.
+- Obrigatórios: CNPJ válido (com dígitos verificadores) e, para cada participante, nome completo (nome e sobrenome) e e-mail, usados no certificado.
+- Painel: botão "Lista de participantes (certificados)" gera um CSV com uma linha por participante (sem os cancelados).
 - Inscrição duplicada: o mesmo órgão (mesmo CNPJ ou mesmo nome, sem diferenciar acentos e maiúsculas) com o mesmo e-mail de responsável em menos de 10 minutos é recusada.
 - Limite de 10 envios por hora por IP.
 

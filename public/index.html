@@ -23,6 +23,7 @@ h1{margin:0;font-size:clamp(28px,6vw,42px);line-height:1.08;font-weight:600;text
 .info small{display:block;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .info b{font-size:18px;display:block}
 .nw{white-space:nowrap}
+.aviso-cert{margin:0;font-size:14px;color:var(--muted)}
 .dica{margin:0;font-size:14px;color:var(--brand);font-weight:500}
 .prog{background:#fff;border:1px solid var(--line);border-radius:6px;padding:14px 16px;margin-bottom:20px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .prog h3{margin:0 0 4px;color:var(--brand)}
@@ -84,7 +85,7 @@ button:disabled{opacity:.5}
 <label>Nome do órgão<input id="orgao" required autocomplete="organization"></label>
 <div class="row">
 <label>Tipo<select id="tipo"><option>Prefeitura</option><option>Câmara</option><option>Instituto de previdência</option><option>Consórcio</option><option>Outro</option></select></label>
-<label>CNPJ (opcional)<input id="cnpj" inputmode="numeric" placeholder="00.000.000/0000-00"></label>
+<label>CNPJ<input id="cnpj" inputmode="numeric" required maxlength="18" placeholder="00.000.000/0000-00"></label>
 </div></fieldset>
 
 <fieldset><legend>Responsável pela inscrição</legend>
@@ -98,6 +99,7 @@ button:disabled{opacity:.5}
 </div></fieldset>
 
 <fieldset><legend>Participantes</legend>
+<p class="aviso-cert">O <b>nome completo</b> e o <b>e-mail</b> de cada participante são obrigatórios para a emissão do certificado. Confira a grafia: o nome sairá no certificado exatamente como for digitado.</p>
 <div id="parts" style="display:grid;gap:10px"></div>
 <div><button type="button" class="alt" id="add">Adicionar participante</button></div>
 <div class="total"><span id="comp">1 participante × R$ 400,00</span><b id="tot">R$ 400,00</b></div>
@@ -127,9 +129,18 @@ function composicao(n){
   return g?n+" participantes: "+p.join(" + "):p[0];
 }
 const emailOk=e=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+function cnpjOk(c){ // 14 dígitos com dígitos verificadores corretos (mesma regra do server.js)
+  const d=c.replace(/\D/g,"");if(d.length!==14||/^(\d)\1+$/.test(d))return false;
+  const dv=n=>{let s=0,p=n-7;for(let i=0;i<n;i++){s+=+d[i]*p--;if(p<2)p=9}const r=s%11;return r<2?0:11-r};
+  return dv(12)===+d[12]&&dv(13)===+d[13];
+}
+$("cnpj").addEventListener("input",e=>{ // formata enquanto digita: 00.000.000/0000-00
+  const d=e.target.value.replace(/\D/g,"").slice(0,14);
+  e.target.value=d.replace(/^(\d{2})(\d)/,"$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3").replace(/\.(\d{3})(\d)/,".$1/$2").replace(/(\d{4})(\d)/,"$1-$2");
+});
 function row(){
   const d=document.createElement("div");d.className="part";
-  d.innerHTML='<label>Nome do participante<input class="pn" autocomplete="off"></label><label>Cargo<input class="pc"></label><label>E-mail (opcional)<input class="pe" type="email"></label><button type="button" class="alt rm">Remover</button>';
+  d.innerHTML='<label>Nome completo<input class="pn" autocomplete="off" required></label><label>Cargo (opcional)<input class="pc"></label><label>E-mail<input class="pe" type="email" required></label><button type="button" class="alt rm">Remover</button>';
   d.querySelector(".rm").onclick=()=>{d.remove();upd()};
   $("parts").appendChild(d);upd();
   return d;
@@ -149,11 +160,17 @@ function invalido(el,t){msg(t,"err");el.focus();return true}
 function validar(){
   for(const[id,nome]of[["orgao","o nome do órgão"],["responsavel","o nome do responsável"],["cargo","o cargo do responsável"],["email","o e-mail do responsável"],["telefone","o telefone"]])
     if(!$(id).value.trim())return invalido($(id),"Preencha "+nome+".");
+  if(!$("cnpj").value.trim())return invalido($("cnpj"),"Preencha o CNPJ do órgão.");
+  if(!cnpjOk($("cnpj").value))return invalido($("cnpj"),"CNPJ inválido. Confira os números.");
   if(!emailOk($("email").value.trim()))return invalido($("email"),"Confira o e-mail do responsável.");
+  let i=0;
   for(const d of $("parts").children){
-    const pn=d.querySelector(".pn"),pe=d.querySelector(".pe");
-    if(!pn.value.trim())return invalido(pn,"Preencha o nome de cada participante ou remova a linha vazia.");
-    if(pe.value.trim()&&!emailOk(pe.value.trim()))return invalido(pe,"Confira o e-mail do participante "+pn.value.trim()+".");
+    i++;
+    const pn=d.querySelector(".pn"),pe=d.querySelector(".pe"),quem=pn.value.trim()||"participante "+i;
+    if(!pn.value.trim())return invalido(pn,"Preencha o nome completo do participante "+i+" ou remova a linha vazia.");
+    if(pn.value.trim().split(/\s+/).length<2)return invalido(pn,"Informe o nome completo (nome e sobrenome) de "+quem+". Ele será usado no certificado.");
+    if(!pe.value.trim())return invalido(pe,"Preencha o e-mail de "+quem+". Ele é necessário para o certificado.");
+    if(!emailOk(pe.value.trim()))return invalido(pe,"Confira o e-mail de "+quem+".");
   }
   return false;
 }

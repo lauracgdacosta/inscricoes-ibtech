@@ -72,6 +72,15 @@ const brl = n => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" 
 const html = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const soDigitos = s => String(s ?? "").replace(/\D/g, "");
 const nomeNorm = s => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+// CNPJ válido: 14 dígitos com os dois dígitos verificadores corretos.
+function cnpjOk(c) {
+  const d = soDigitos(c);
+  if (d.length !== 14 || /^(\d)\1+$/.test(d)) return false;
+  const dv = n => { let s = 0, p = n - 7; for (let i = 0; i < n; i++) { s += +d[i] * p--; if (p < 2) p = 9; } const r = s % 11; return r < 2 ? 0 : 11 - r; };
+  return dv(12) === +d[12] && dv(13) === +d[13];
+}
+const cnpjFmt = c => soDigitos(c).replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
+const nomeCompleto = n => n.split(/\s+/).filter(Boolean).length >= 2;
 // Express 4 não captura erros de funções async: sem isso, uma falha do banco derruba o servidor.
 const seguro = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
@@ -183,8 +192,8 @@ app.post("/api/inscricoes", limite, async (req, res) => {
     const b = req.body || {};
     if (b.site) return res.json({ ok: true }); // campo isca contra robôs
     const participantes = (Array.isArray(b.participantes) ? b.participantes : []).slice(0, 30).map(p => ({
-      nome: txt(p?.nome), cargo: txt(p?.cargo), email: txt(p?.email, 120),
-    })).filter(p => p.nome);
+      nome: txt(p?.nome).replace(/\s+/g, " "), cargo: txt(p?.cargo), email: txt(p?.email, 120),
+    })).filter(p => p.nome || p.email);
     const r = {
       id: crypto.randomUUID(),
       criadaEm: new Date().toISOString(),
@@ -194,9 +203,13 @@ app.post("/api/inscricoes", limite, async (req, res) => {
       notebook: txt(b.notebook, 20), observacoes: txt(b.observacoes, 1000),
     };
     if (!r.orgao || !r.responsavel || !r.cargo || !r.telefone) return res.status(400).json({ erro: "Preencha órgão, responsável, cargo e telefone." });
+    if (!r.cnpj) return res.status(400).json({ erro: "Informe o CNPJ do órgão." });
+    if (!cnpjOk(r.cnpj)) return res.status(400).json({ erro: "CNPJ inválido. Confira os números." });
+    r.cnpj = cnpjFmt(r.cnpj);
     if (!emailOk(r.email)) return res.status(400).json({ erro: "Confira o e-mail informado." });
     if (!participantes.length) return res.status(400).json({ erro: "Informe ao menos um participante." });
-    if (participantes.some(p => p.email && !emailOk(p.email))) return res.status(400).json({ erro: "Confira os e-mails dos participantes." });
+    if (participantes.some(p => !nomeCompleto(p.nome))) return res.status(400).json({ erro: "Informe o nome completo de cada participante (é usado no certificado)." });
+    if (participantes.some(p => !emailOk(p.email))) return res.status(400).json({ erro: "Informe um e-mail válido para cada participante (é usado para o certificado)." });
 
     const gravou = await exclusivo(async () => {
       if (ehDuplicada(r, await store.recentes(JANELA_DUPLICADA_MIN))) return false;
@@ -260,6 +273,16 @@ app.get("/admin/inscricoes.csv", admin, seguro(async (_q, res) => {
     ].map(csvCampo).join(";"); }));
   res.set({ "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": 'attachment; filename="inscricoes-treinamento-ibtech.csv"' });
   res.send("﻿" + linhas.join("\r\n")); // BOM para o Excel reconhecer os acentos
+}));
+
+// Uma linha por participante (para certificados e lista de presença). Cancelados ficam de fora.
+app.get("/admin/participantes.csv", admin, seguro(async (_q, res) => {
+  const lista = (await store.list()).filter(r => finDe(r).situacao !== "Cancelado").reverse();
+  const linhas = [["Nome completo", "E-mail", "Cargo", "Órgão", "CNPJ", "Situação financeira"].map(csvCampo).join(";")];
+  for (const r of lista) for (const p of r.participantes)
+    linhas.push([p.nome, p.email, p.cargo, r.orgao, r.cnpj, finDe(r).situacao].map(csvCampo).join(";"));
+  res.set({ "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": 'attachment; filename="participantes-treinamento-ibtech.csv"' });
+  res.send("﻿" + linhas.join("\r\n"));
 }));
 
 app.get("/healthz", (_q, res) => res.send("ok"));

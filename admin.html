@@ -22,6 +22,8 @@ h1{margin:0;font-size:28px;font-weight:600}
 .filtros button[aria-pressed="true"]{background:var(--brand);color:#fff;border-color:var(--brand)}
 .filtros input{margin-left:auto;min-width:220px}
 a.btn,button{font:inherit;font-weight:600;background:var(--brand);color:#fff;border:0;border-radius:4px;padding:10px 16px;text-decoration:none;cursor:pointer;display:inline-block}
+.botoes{display:flex;gap:8px;flex-wrap:wrap}
+a.btn.alt{background:#fff;color:var(--brand);border:1px solid var(--brand)}
 button.sec{background:#fff;color:var(--brand);border:1px solid var(--brand);padding:4px 10px;font-size:13px}
 button.del{background:#fff;color:var(--err);border:1px solid var(--err);padding:4px 10px;font-size:13px}
 button:disabled{opacity:.5;cursor:default}
@@ -53,7 +55,7 @@ dialog label{display:grid;gap:4px;font-weight:500;font-size:14px}
 .erro{color:var(--err);font-size:14px}
 @media(max-width:620px){.g2{grid-template-columns:1fr}.filtros input{margin-left:0;min-width:0}}
 </style></head><body><div class="wrap">
-<div class="head"><h1>Inscrições recebidas</h1><a class="btn" href="/admin/inscricoes.csv">Baixar planilha (CSV)</a></div>
+<div class="head"><h1>Inscrições recebidas</h1><div class="botoes"><a class="btn" href="/admin/inscricoes.csv">Baixar planilha (CSV)</a><a class="btn alt" href="/admin/participantes.csv">Lista de participantes (certificados)</a></div></div>
 <div id="aviso"></div>
 <div class="chips" id="chips"></div>
 <div class="filtros" id="filtros"></div>
@@ -136,7 +138,7 @@ function linha(r){
 <td class="num">${hora(r.criadaEm)}</td>
 <td><b class="org">${esc(r.orgao)}</b><div class="sub">${esc(r.tipo)} ${esc(r.cnpj)}</div></td>
 <td>${esc(r.responsavel)}<div class="sub">${esc(r.cargo)}<br>${esc(r.email)}<br>${esc(r.telefone)}</div></td>
-<td>${r.participantes.map(p=>esc(p.nome)+(p.cargo?' <span class="sub">('+esc(p.cargo)+")</span>":"")).join("<br>")}${r.notebook?`<div class="sub">Notebook: ${esc(r.notebook)}</div>`:""}${r.observacoes?`<div class="sub">Obs.: ${esc(r.observacoes)}</div>`:""}</td>
+<td>${r.participantes.map(p=>esc(p.nome)+(p.cargo?' <span class="sub">('+esc(p.cargo)+")</span>":"")+(p.email?'<div class="sub">'+esc(p.email)+"</div>":"")).join("")}${r.notebook?`<div class="sub">Notebook: ${esc(r.notebook)}</div>`:""}${r.observacoes?`<div class="sub">Obs.: ${esc(r.observacoes)}</div>`:""}</td>
 <td class="num">${brl(r.valorTotal)}<div class="sub">${r.participantes.length} ${r.participantes.length===1?"participante":"participantes"}</div>${r.valorTotal!==valorDe(r.participantes.length)?`<div class="sub" title="Inscrição feita antes da mudança de preço">Pela tabela atual: ${brl(valorDe(r.participantes.length))}</div>`:""}</td>
 <td class="fin"><span class="badge b-${esc(f.situacao)}">${esc(f.situacao)}</span>${Number(f.valorPago)?`<div class="sub">Pago: ${brl(f.valorPago)}</div>`:""}${s&&Number(f.valorPago)?`<div class="sub">Saldo: ${brl(s)}</div>`:""}${detFin?`<div class="sub">${detFin}</div>`:""}${f.obs?`<div class="sub">${esc(f.obs)}</div>`:""}</td>
 <td>${em}</td>
