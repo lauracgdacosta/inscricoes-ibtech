@@ -39,6 +39,8 @@ button.alt{background:#fff;color:var(--brand);border:1px solid var(--brand)}
 button:disabled{opacity:.5}
 .total{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:var(--accent);border-radius:6px;padding:12px 16px;font-weight:600}
 .total b{font-size:24px}
+.nota{margin:-8px 0 16px;padding:10px 14px;border-left:4px solid var(--accent);background:#fffbe8;border-radius:0 4px 4px 0;font-size:14px;color:var(--dark)}
+.nota a{color:var(--brand);font-weight:600;white-space:nowrap}
 .hp{position:absolute;left:-9999px}
 .msg{padding:12px 14px;border-radius:4px;border:1px solid var(--line);background:#fff;margin-top:14px}
 .msg.err{border-color:var(--err);color:var(--err)}
@@ -67,6 +69,7 @@ button:disabled{opacity:.5}
 <div><small>Cidade</small><b>Belo Horizonte</b></div>
 <div><small>Valor</small><b>R$ 400,00 por pessoa</b></div>
 </div>
+<p class="nota">A nota fiscal será gerada mediante a confirmação da inscrição.<span id="finTel" hidden> Dúvidas: fale com o nosso financeiro pelo número <a id="finTelLink"></a>.</span></p>
 <p style="margin:0 0 16px;color:var(--muted)">O local será definido e informado por e-mail a quem se inscrever. A inscrição vale para os dois dias e todos os temas. Leve seu notebook para as aulas práticas.</p>
 
 <div class="prog">
@@ -126,6 +129,8 @@ function upd(){
   $("qtd").textContent=n;$("tot").textContent=brl(n*400);
 }
 $("add").onclick=()=>row().querySelector(".pn").focus();row();
+fetch("/api/info").then(r=>r.json()).then(i=>{const t=i.financeiroTelefone;if(!t)return;
+  const a=$("finTelLink");a.textContent=t;a.href="tel:"+t.replace(/[^\d+]/g,"");$("finTel").hidden=false}).catch(()=>{});
 function msg(t,k){const m=$("msg");m.hidden=false;m.className="msg "+k;m.textContent=t;m.scrollIntoView({behavior:"smooth",block:"center"})}
 function invalido(el,t){msg(t,"err");el.focus();return true}
 function validar(){

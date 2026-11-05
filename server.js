@@ -116,6 +116,7 @@ async function enviarConfirmacao(r) {
     ...lista.map(n => "- " + n),
     "",
     `Valor total: ${brl(r.valorTotal)} (${qtd} × ${brl(VALOR)})`,
+    "A nota fiscal será gerada mediante a confirmação da inscrição." + (financeiroTel() ? ` Dúvidas: fale com o nosso financeiro pelo número ${financeiroTel()}.` : ""),
     "",
     "O local do treinamento ainda será definido e será informado posteriormente por e-mail.",
     "",
@@ -129,6 +130,7 @@ async function enviarConfirmacao(r) {
 <p>Recebemos a inscrição de <b>${html(r.orgao)}</b>.</p>
 <p><b>Participantes (${qtd}):</b><br>${lista.map(html).join("<br>")}</p>
 <p style="background:#e5c438;padding:10px 14px;font-size:16px"><b>Valor total: ${brl(r.valorTotal)}</b> (${qtd} × ${brl(VALOR)})</p>
+<p style="font-size:14px;color:#5e5d86">A nota fiscal será gerada mediante a confirmação da inscrição.${financeiroTel() ? ` Dúvidas: fale com o nosso financeiro pelo número <b>${html(financeiroTel())}</b>.` : ""}</p>
 <p>O local do treinamento ainda será definido e será informado posteriormente por e-mail.</p>
 <p>Equipe Ibtech</p></div></div>`;
   const msg = { from: process.env.EMAIL_FROM, to: [r.email], subject: "Inscrição recebida – Treinamento Ibtech 01 e 02/12/2026", text: texto, html: corpo };
@@ -162,6 +164,10 @@ async function confirmarERegistrar(r) {
 }
 
 // ---------- API pública ----------
+// Informações exibidas no formulário que a equipe pode mudar pelo Render, sem alterar o código.
+const financeiroTel = () => txt(process.env.FINANCEIRO_TELEFONE, 40);
+app.get("/api/info", (_q, res) => res.json({ financeiroTelefone: financeiroTel() }));
+
 app.post("/api/inscricoes", limite, async (req, res) => {
   try {
     const b = req.body || {};

@@ -16,6 +16,8 @@ services:
         sync: false
       - key: EMAIL_REPLY_TO
         sync: false
+      - key: FINANCEIRO_TELEFONE
+        sync: false
       - key: DATABASE_URL
         fromDatabase:
           name: inscricoes-ibtech-db
