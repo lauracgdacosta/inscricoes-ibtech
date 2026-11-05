@@ -3,37 +3,187 @@
 <title>Painel de inscrições – Ibtech</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap">
 <style>
-:root{--brand:#3f3e82;--dark:#2b2a5c;--accent:#e5c438;--bg:#f6f6fb;--line:#d9d9ea;--muted:#5e5d86}
+:root{--brand:#3f3e82;--dark:#2b2a5c;--accent:#e5c438;--bg:#f6f6fb;--line:#d9d9ea;--muted:#5e5d86;--err:#b3261e;--ok:#1d7a4a}
+*{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--dark);font:15px/1.45 'Outfit',system-ui,sans-serif}
-.wrap{max-width:1200px;margin:0 auto;padding:20px 16px 48px}
-h1{margin:0 0 12px;font-size:28px;font-weight:600}
-.chips{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.wrap{max-width:1280px;margin:0 auto;padding:20px 16px 48px}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{margin:0;font-size:28px;font-weight:600}
+.aviso{margin:14px 0 0;padding:10px 14px;border-radius:6px;border:1px solid var(--line);background:#fff;font-size:14px}
+.aviso.err{border-color:var(--err);color:var(--err);background:#fdf3f2}
+.chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:16px 0}
 .chip{background:#fff;border:1px solid var(--line);border-radius:6px;padding:10px 16px}
-.chip b{display:block;font-size:28px;color:var(--brand);line-height:1.1}
+.chip b{display:block;font-size:26px;color:var(--brand);line-height:1.15;font-variant-numeric:tabular-nums}
 .chip span{font-size:13px;color:var(--muted)}
+.chip.rec b{color:var(--ok)}
+.chip.pend{border-color:var(--accent);box-shadow:inset 0 -4px 0 var(--accent)}
+.filtros{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filtros button{background:#fff;color:var(--brand);border:1px solid var(--line);font-weight:500;padding:6px 12px}
+.filtros button[aria-pressed="true"]{background:var(--brand);color:#fff;border-color:var(--brand)}
+.filtros input{margin-left:auto;min-width:220px}
 a.btn,button{font:inherit;font-weight:600;background:var(--brand);color:#fff;border:0;border-radius:4px;padding:10px 16px;text-decoration:none;cursor:pointer;display:inline-block}
-button.del{background:#fff;color:#b3261e;border:1px solid #b3261e;padding:4px 10px;font-size:13px}
+button.sec{background:#fff;color:var(--brand);border:1px solid var(--brand);padding:4px 10px;font-size:13px}
+button.del{background:#fff;color:var(--err);border:1px solid var(--err);padding:4px 10px;font-size:13px}
+button:disabled{opacity:.5;cursor:default}
+input,select,textarea{font:inherit;color:var(--dark);background:#fff;border:1px solid var(--line);border-radius:4px;padding:8px 10px;width:100%}
 .tw{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:6px;margin-top:14px}
-table{border-collapse:collapse;width:100%}
+table{border-collapse:collapse;width:100%;min-width:1000px}
 th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
 th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+td.num{white-space:nowrap;font-variant-numeric:tabular-nums}
+tr.cancelado td{color:var(--muted)}
+tr.cancelado .org{text-decoration:line-through}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;border:1px solid}
+.b-Pendente{background:#fff8dc;border-color:#d9b52a;color:#6b5600}
+.b-Empenhado{background:#ecebf7;border-color:var(--brand);color:var(--brand)}
+.b-Pago{background:#e6f4ec;border-color:var(--ok);color:var(--ok)}
+.b-Isento{background:#f1f1f5;border-color:#9a99b5;color:var(--muted)}
+.b-Cancelado{background:#fdf3f2;border-color:var(--err);color:var(--err)}
+.sub{font-size:13px;color:var(--muted)}
+.em-ok{color:var(--ok)}.em-err{color:var(--err)}
+.acoes{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+dialog{border:0;border-radius:8px;padding:0;width:min(560px,calc(100% - 32px));color:var(--dark)}
+dialog::backdrop{background:rgba(43,42,92,.45)}
+dialog form{padding:20px;display:grid;gap:12px}
+dialog h2{margin:0;font-size:20px}
+dialog label{display:grid;gap:4px;font-weight:500;font-size:14px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dlg-acoes{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.dlg-acoes .sec{padding:10px 16px;font-size:15px}
+.erro{color:var(--err);font-size:14px}
+@media(max-width:620px){.g2{grid-template-columns:1fr}.filtros input{margin-left:0;min-width:0}}
 </style></head><body><div class="wrap">
-<h1>Inscrições recebidas</h1>
+<div class="head"><h1>Inscrições recebidas</h1><a class="btn" href="/admin/inscricoes.csv">Baixar planilha (CSV)</a></div>
+<div id="aviso"></div>
 <div class="chips" id="chips"></div>
-<a class="btn" href="/admin/inscricoes.csv">Baixar planilha (CSV)</a>
-<div class="tw"><table><thead><tr><th>Recebida</th><th>Órgão</th><th>Responsável</th><th>Contato</th><th>Participantes</th><th>Total</th><th>Notebook</th><th>Obs.</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+<div class="filtros" id="filtros"></div>
+<div class="tw"><table><thead><tr><th>Recebida</th><th>Órgão</th><th>Responsável</th><th>Participantes</th><th>Total</th><th>Financeiro</th><th>E-mail de confirmação</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
 </div>
+
+<dialog id="dlg"><form id="ff" method="dialog">
+<h2 id="dlgTit">Financeiro</h2>
+<div class="sub" id="dlgSub"></div>
+<div class="g2">
+<label>Situação<select id="fSit"></select></label>
+<label>Forma de pagamento<select id="fForma"></select></label>
+</div>
+<div class="g2">
+<label>Nº do empenho<input id="fEmp"></label>
+<label>Nº da nota fiscal<input id="fNF"></label>
+</div>
+<div class="g2">
+<label>Data do pagamento<input id="fData" type="date"></label>
+<label>Valor pago (R$)<input id="fValor" type="number" min="0" step="0.01" inputmode="decimal"></label>
+</div>
+<label>Observações financeiras<textarea id="fObs" rows="2"></textarea></label>
+<div class="erro" id="fErro" hidden></div>
+<div class="dlg-acoes"><button type="button" class="sec" id="fCancel">Fechar</button><button type="submit" id="fSalvar">Salvar</button></div>
+</form></dialog>
+
 <script>
-const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const brl=n=>n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const brl=n=>Number(n||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const dataBR=d=>d?d.split("-").reverse().join("/"):"";
+const hora=s=>new Date(s).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo",dateStyle:"short",timeStyle:"short"});
+const fin=r=>({situacao:"Pendente",forma:"",empenho:"",notaFiscal:"",dataPagamento:"",valorPago:0,obs:"",...(r.financeiro||{})});
+const semCobranca=f=>f.situacao==="Isento"||f.situacao==="Cancelado";
+const saldo=r=>{const f=fin(r);return semCobranca(f)?0:Math.max(0,r.valorTotal-Number(f.valorPago||0))};
+let lista=[],cfg={situacoes:["Pendente","Empenhado","Pago","Isento","Cancelado"],formas:[""]},filtro="Todas",busca="",atual=null;
+
+async function api(url,opt){const r=await fetch(url,opt);let j={};try{j=await r.json()}catch{}if(!r.ok)throw new Error(j.erro||"Erro "+r.status);return j}
+
 async function load(){
-  let l;
-  try{const r=await fetch("/admin/api/inscricoes");if(!r.ok)throw 0;l=await r.json()}
-  catch{document.getElementById("rows").innerHTML='<tr><td colspan="9" style="color:#b3261e">Não foi possível carregar as inscrições. Recarregue a página.</td></tr>';return}
-  const pessoas=l.reduce((a,r)=>a+r.participantes.length,0),valor=l.reduce((a,r)=>a+r.valorTotal,0);
-  document.getElementById("chips").innerHTML=`<div class="chip"><b>${l.length}</b><span>órgãos inscritos</span></div><div class="chip"><b>${pessoas}</b><span>participantes</span></div><div class="chip"><b>${brl(valor)}</b><span>valor previsto</span></div>`;
-  document.getElementById("rows").innerHTML=l.length?l.map(r=>`<tr><td>${new Date(r.criadaEm).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"})}</td><td><b>${esc(r.orgao)}</b><br>${esc(r.tipo)} ${esc(r.cnpj)}</td><td>${esc(r.responsavel)}<br>${esc(r.cargo)}</td><td>${esc(r.email)}<br>${esc(r.telefone)}</td><td>${r.participantes.map(p=>esc(p.nome)+(p.cargo?" ("+esc(p.cargo)+")":"")).join("<br>")}</td><td>${brl(r.valorTotal)}</td><td>${esc(r.notebook)}</td><td>${esc(r.observacoes)}</td><td><button class="del" data-id="${r.id}">Excluir</button></td></tr>`).join(""):'<tr><td colspan="9" style="color:#5e5d86">Nenhuma inscrição recebida ainda.</td></tr>';
+  try{[lista,cfg]=await Promise.all([api("/admin/api/inscricoes"),api("/admin/api/config")])}
+  catch{$("rows").innerHTML='<tr><td colspan="8" class="em-err">Não foi possível carregar as inscrições. Recarregue a página.</td></tr>';return}
+  $("aviso").innerHTML=cfg.emailAtivo
+    ?`<div class="aviso">E-mail de confirmação <b>ativo</b>. Remetente: ${esc(cfg.remetente)}</div>`
+    :`<div class="aviso err">E-mail de confirmação <b>desativado</b>: falta preencher ${cfg.faltando.map(esc).join(" e ")} em Environment no Render.</div>`;
+  $("fSit").innerHTML=cfg.situacoes.map(s=>`<option>${esc(s)}</option>`).join("");
+  $("fForma").innerHTML=cfg.formas.map(s=>`<option value="${esc(s)}">${s?esc(s):"Não informada"}</option>`).join("");
+  render();
 }
-document.addEventListener("click",async e=>{const b=e.target.closest(".del");if(!b)return;if(b.dataset.s!=="1"){b.dataset.s="1";b.textContent="Confirmar exclusão";return}b.disabled=true;const r=await fetch("/admin/api/inscricoes/"+encodeURIComponent(b.dataset.id),{method:"DELETE"}).catch(()=>null);if(!r||!r.ok)alert("Não foi possível excluir. Tente novamente.");load()});
+
+function render(){
+  const ativos=lista.filter(r=>fin(r).situacao!=="Cancelado");
+  const previsto=lista.reduce((a,r)=>a+(semCobranca(fin(r))?0:r.valorTotal),0);
+  const recebido=ativos.reduce((a,r)=>a+Number(fin(r).valorPago||0),0);
+  const aReceber=lista.reduce((a,r)=>a+saldo(r),0);
+  const pessoas=ativos.reduce((a,r)=>a+r.participantes.length,0);
+  $("chips").innerHTML=`<div class="chip"><b>${ativos.length}</b><span>órgãos inscritos</span></div>
+<div class="chip"><b>${pessoas}</b><span>participantes</span></div>
+<div class="chip"><b>${brl(previsto)}</b><span>valor previsto</span></div>
+<div class="chip rec"><b>${brl(recebido)}</b><span>recebido</span></div>
+<div class="chip pend"><b>${brl(aReceber)}</b><span>a receber</span></div>`;
+  const cont=s=>lista.filter(r=>fin(r).situacao===s).length;
+  $("filtros").innerHTML=["Todas",...cfg.situacoes].map(s=>`<button type="button" data-f="${esc(s)}" aria-pressed="${s===filtro}">${esc(s)} (${s==="Todas"?lista.length:cont(s)})</button>`).join("")
+    +`<input id="busca" type="search" placeholder="Buscar órgão, responsável, empenho..." value="${esc(busca)}">`;
+  const q=busca.trim().toLowerCase();
+  const vis=lista.filter(r=>(filtro==="Todas"||fin(r).situacao===filtro)&&(!q||[r.orgao,r.cnpj,r.responsavel,r.email,fin(r).empenho,fin(r).notaFiscal].join(" ").toLowerCase().includes(q)));
+  $("rows").innerHTML=vis.length?vis.map(linha).join(""):`<tr><td colspan="8" class="sub">${lista.length?"Nenhuma inscrição neste filtro.":"Nenhuma inscrição recebida ainda."}</td></tr>`;
+}
+
+function linha(r){
+  const f=fin(r),e=r.emailConfirmacao;
+  const em=!e?'<span class="sub">Sem registro (inscrição anterior a esta versão)</span>'
+    :e.situacao==="enviado"?`<span class="em-ok">Enviado</span><div class="sub">${hora(e.em)}</div>`
+    :e.situacao==="erro"?`<span class="em-err">Falhou</span><div class="sub">${esc(e.erro)}</div>`
+    :'<span class="sub">Não enviado (e-mail desativado)</span>';
+  const detFin=[f.forma,f.empenho&&"Empenho "+f.empenho,f.notaFiscal&&"NF "+f.notaFiscal,f.dataPagamento&&"Pago em "+dataBR(f.dataPagamento)].filter(Boolean).map(esc).join("<br>");
+  const s=saldo(r);
+  return `<tr class="${f.situacao==="Cancelado"?"cancelado":""}">
+<td class="num">${hora(r.criadaEm)}</td>
+<td><b class="org">${esc(r.orgao)}</b><div class="sub">${esc(r.tipo)} ${esc(r.cnpj)}</div></td>
+<td>${esc(r.responsavel)}<div class="sub">${esc(r.cargo)}<br>${esc(r.email)}<br>${esc(r.telefone)}</div></td>
+<td>${r.participantes.map(p=>esc(p.nome)+(p.cargo?' <span class="sub">('+esc(p.cargo)+")</span>":"")).join("<br>")}${r.notebook?`<div class="sub">Notebook: ${esc(r.notebook)}</div>`:""}${r.observacoes?`<div class="sub">Obs.: ${esc(r.observacoes)}</div>`:""}</td>
+<td class="num">${brl(r.valorTotal)}<div class="sub">${r.participantes.length} × R$ 400</div></td>
+<td class="fin"><span class="badge b-${esc(f.situacao)}">${esc(f.situacao)}</span>${Number(f.valorPago)?`<div class="sub">Pago: ${brl(f.valorPago)}</div>`:""}${s&&Number(f.valorPago)?`<div class="sub">Saldo: ${brl(s)}</div>`:""}${detFin?`<div class="sub">${detFin}</div>`:""}${f.obs?`<div class="sub">${esc(f.obs)}</div>`:""}</td>
+<td>${em}</td>
+<td><div class="acoes"><button class="sec" data-fin="${esc(r.id)}">Financeiro</button>${cfg.emailAtivo?`<button class="sec" data-mail="${esc(r.id)}">${e&&e.situacao==="enviado"?"Reenviar e-mail":"Enviar e-mail"}</button>`:""}<button class="del" data-del="${esc(r.id)}">Excluir</button></div></td></tr>`;
+}
+
+function abrir(id){
+  atual=lista.find(r=>r.id===id);if(!atual)return;
+  const f=fin(atual);
+  $("dlgTit").textContent=atual.orgao;
+  $("dlgSub").textContent=`${atual.participantes.length} participante(s) · total ${brl(atual.valorTotal)}`;
+  $("fSit").value=f.situacao;$("fForma").value=f.forma;$("fEmp").value=f.empenho;$("fNF").value=f.notaFiscal;
+  $("fData").value=f.dataPagamento;$("fValor").value=Number(f.valorPago)?f.valorPago:"";$("fObs").value=f.obs;
+  $("fErro").hidden=true;$("dlg").showModal();
+}
+$("fSit").onchange=()=>{ // ao marcar como pago, sugere valor integral e a data de hoje
+  if($("fSit").value!=="Pago"||!atual)return;
+  if(!$("fValor").value)$("fValor").value=atual.valorTotal;
+  if(!$("fData").value)$("fData").value=new Date().toLocaleDateString("sv-SE",{timeZone:"America/Sao_Paulo"});
+};
+$("fCancel").onclick=()=>$("dlg").close();
+$("ff").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const body={situacao:$("fSit").value,forma:$("fForma").value,empenho:$("fEmp").value,notaFiscal:$("fNF").value,dataPagamento:$("fData").value,valorPago:Number($("fValor").value||0),obs:$("fObs").value};
+  $("fSalvar").disabled=true;
+  try{const j=await api("/admin/api/inscricoes/"+encodeURIComponent(atual.id)+"/financeiro",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    atual.financeiro=j.financeiro;$("dlg").close();render()}
+  catch(err){$("fErro").textContent=err.message;$("fErro").hidden=false}
+  $("fSalvar").disabled=false;
+});
+
+document.addEventListener("input",e=>{if(e.target.id==="busca"){busca=e.target.value;const pos=e.target.selectionStart;render();const b=$("busca");b.focus();b.setSelectionRange(pos,pos)}});
+document.addEventListener("click",async e=>{
+  const t=e.target.closest("button");if(!t)return;
+  if(t.dataset.f){filtro=t.dataset.f;render();return}
+  if(t.dataset.fin){abrir(t.dataset.fin);return}
+  if(t.dataset.mail){
+    t.disabled=true;t.textContent="Enviando...";
+    try{await api("/admin/api/inscricoes/"+encodeURIComponent(t.dataset.mail)+"/reenviar-email",{method:"POST"});}
+    catch(err){alert("Não foi possível enviar: "+err.message)}
+    load();return;
+  }
+  if(t.dataset.del){
+    if(t.dataset.s!=="1"){t.dataset.s="1";t.textContent="Confirmar exclusão";return}
+    t.disabled=true;
+    try{await api("/admin/api/inscricoes/"+encodeURIComponent(t.dataset.del),{method:"DELETE"})}catch{alert("Não foi possível excluir. Tente novamente.")}
+    load();
+  }
+});
 load();
 </script></body></html>

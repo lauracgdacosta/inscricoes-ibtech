@@ -30,6 +30,11 @@ if (process.env.DATABASE_URL) {
       return q.rows.map(x => x.dados);
     },
     async remove(id) { await pool.query("DELETE FROM inscricoes WHERE id=$1", [id]); },
+    async get(id) { const q = await pool.query("SELECT dados FROM inscricoes WHERE id=$1", [id]); return q.rows[0]?.dados; },
+    async setCampo(id, campo, valor) {
+      const q = await pool.query("UPDATE inscricoes SET dados = jsonb_set(dados, ARRAY[$2]::text[], $3::jsonb) WHERE id=$1", [id, campo, JSON.stringify(valor)]);
+      return q.rowCount > 0;
+    },
   };
 } else {
   console.warn("DATABASE_URL não definida: usando memória (apenas para testes, os dados somem ao reiniciar).");
@@ -40,8 +45,15 @@ if (process.env.DATABASE_URL) {
     async list() { return mem.slice(); },
     async recentes(min) { const lim = Date.now() - min * 60e3; return mem.filter(r => Date.parse(r.criadaEm) > lim); },
     async remove(id) { const i = mem.findIndex(x => x.id === id); if (i >= 0) mem.splice(i, 1); },
+    async get(id) { return mem.find(x => x.id === id); },
+    async setCampo(id, campo, valor) { const r = mem.find(x => x.id === id); if (r) r[campo] = valor; return Boolean(r); },
   };
 }
+
+// ---------- financeiro ----------
+const SITUACOES = ["Pendente", "Empenhado", "Pago", "Isento", "Cancelado"];
+const FORMAS = ["", "Transferência", "Boleto", "PIX", "Outro"];
+const finDe = r => ({ situacao: "Pendente", forma: "", empenho: "", notaFiscal: "", dataPagamento: "", valorPago: 0, obs: "", ...(r.financeiro || {}) });
 
 // ---------- utilidades ----------
 const txt = (v, max = 200) => String(v ?? "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, max);
@@ -127,7 +139,26 @@ async function enviarConfirmacao(r) {
     body: JSON.stringify(msg),
     signal: AbortSignal.timeout(15000),
   });
-  if (!resp.ok) throw new Error(`Resend respondeu ${resp.status}: ${await resp.text()}`);
+  if (!resp.ok) {
+    let det = await resp.text();
+    try { det = JSON.parse(det).message || det; } catch {}
+    throw new Error(`Resend recusou (${resp.status}): ${det}`);
+  }
+}
+
+// Envia e grava o resultado na inscrição, para o painel mostrar se o e-mail saiu ou qual foi o erro.
+async function confirmarERegistrar(r) {
+  let status;
+  if (!emailAtivo()) status = { situacao: "desativado", em: new Date().toISOString() };
+  else {
+    try { await enviarConfirmacao(r); status = { situacao: "enviado", em: new Date().toISOString() }; }
+    catch (e) {
+      console.error("Falha ao enviar e-mail de confirmação para", r.email, "-", e.message);
+      status = { situacao: "erro", erro: txt(e.message, 300), em: new Date().toISOString() };
+    }
+  }
+  await store.setCampo(r.id, "emailConfirmacao", status).catch(e => console.error("Falha ao registrar status do e-mail:", e.message));
+  return status;
 }
 
 // ---------- API pública ----------
@@ -159,7 +190,7 @@ app.post("/api/inscricoes", limite, async (req, res) => {
     if (!gravou) return res.status(409).json({ erro: "Já recebemos uma inscrição deste órgão com este e-mail há poucos minutos. Não é preciso enviar de novo. Se quiser alterar algo, fale com a equipe Ibtech." });
 
     res.json({ ok: true, participantes: participantes.length, valorTotal: r.valorTotal, emailConfirmacao: emailAtivo() });
-    enviarConfirmacao(r).catch(e => console.error("Falha ao enviar e-mail de confirmação para", r.email, "-", e.message));
+    confirmarERegistrar(r);
   } catch (e) { console.error(e); res.status(500).json({ erro: "Não foi possível registrar. Tente novamente." }); }
 });
 
@@ -172,12 +203,45 @@ const csvCampo = s => {
 app.get("/admin", admin, (_q, res) => res.sendFile(path.join(__dirname, "admin.html")));
 app.get("/admin/api/inscricoes", admin, seguro(async (_q, res) => res.json(await store.list())));
 app.delete("/admin/api/inscricoes/:id", admin, seguro(async (q, res) => { await store.remove(q.params.id); res.json({ ok: true }); }));
+app.get("/admin/api/config", admin, (_q, res) => res.json({
+  emailAtivo: emailAtivo(),
+  faltando: ["RESEND_API_KEY", "EMAIL_FROM"].filter(k => !process.env[k]),
+  remetente: process.env.EMAIL_FROM || "",
+  situacoes: SITUACOES, formas: FORMAS,
+}));
+app.post("/admin/api/inscricoes/:id/reenviar-email", admin, seguro(async (q, res) => {
+  const r = await store.get(q.params.id);
+  if (!r) return res.status(404).json({ erro: "Inscrição não encontrada." });
+  if (!emailAtivo()) return res.status(400).json({ erro: "E-mail desativado: preencha RESEND_API_KEY e EMAIL_FROM no Render." });
+  const status = await confirmarERegistrar(r);
+  res.status(status.situacao === "enviado" ? 200 : 502).json({ ok: status.situacao === "enviado", status, erro: status.erro });
+}));
+app.put("/admin/api/inscricoes/:id/financeiro", admin, seguro(async (q, res) => {
+  const b = q.body || {};
+  const valorPago = Math.round(Number(b.valorPago || 0) * 100) / 100;
+  const f = {
+    situacao: txt(b.situacao, 20), forma: txt(b.forma, 20), empenho: txt(b.empenho, 60), notaFiscal: txt(b.notaFiscal, 60),
+    dataPagamento: txt(b.dataPagamento, 10), valorPago, obs: txt(b.obs, 500), atualizadoEm: new Date().toISOString(),
+  };
+  if (!SITUACOES.includes(f.situacao)) return res.status(400).json({ erro: "Situação inválida." });
+  if (!FORMAS.includes(f.forma)) return res.status(400).json({ erro: "Forma de pagamento inválida." });
+  if (!Number.isFinite(valorPago) || valorPago < 0 || valorPago > 1e6) return res.status(400).json({ erro: "Valor pago inválido." });
+  if (f.dataPagamento && !/^\d{4}-\d{2}-\d{2}$/.test(f.dataPagamento)) return res.status(400).json({ erro: "Data de pagamento inválida." });
+  if (!(await store.setCampo(q.params.id, "financeiro", f))) return res.status(404).json({ erro: "Inscrição não encontrada." });
+  res.json({ ok: true, financeiro: f });
+}));
 app.get("/admin/inscricoes.csv", admin, seguro(async (_q, res) => {
   const lista = await store.list();
-  const linhas = [["Recebida", "Órgão", "Tipo", "CNPJ", "Responsável", "Cargo", "E-mail", "Telefone", "Participantes", "Qtd", "Valor total (R$)", "Notebook", "Observações"].map(csvCampo).join(";")]
-    .concat(lista.map(r => [new Date(r.criadaEm).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }), r.orgao, r.tipo, r.cnpj, r.responsavel, r.cargo, r.email, r.telefone,
+  const dataBR = d => d ? d.split("-").reverse().join("/") : "";
+  const reais = n => Number(n || 0).toFixed(2).replace(".", ","); // formato do Excel em português
+  const linhas = [["Recebida", "Órgão", "Tipo", "CNPJ", "Responsável", "Cargo", "E-mail", "Telefone", "Participantes", "Qtd", "Valor total (R$)", "Notebook", "Observações",
+    "Situação", "Forma de pagamento", "Nº empenho", "Nº nota fiscal", "Data do pagamento", "Valor pago (R$)", "Saldo (R$)", "Obs. financeiras"].map(csvCampo).join(";")]
+    .concat(lista.map(r => { const f = finDe(r); const semCobranca = f.situacao === "Isento" || f.situacao === "Cancelado"; return [
+      new Date(r.criadaEm).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }), r.orgao, r.tipo, r.cnpj, r.responsavel, r.cargo, r.email, r.telefone,
       r.participantes.map(p => `${p.nome}${p.cargo ? " (" + p.cargo + ")" : ""}${p.email ? " <" + p.email + ">" : ""}`).join(" | "),
-      r.participantes.length, r.valorTotal, r.notebook, r.observacoes].map(csvCampo).join(";")));
+      r.participantes.length, reais(r.valorTotal), r.notebook, r.observacoes,
+      f.situacao, f.forma, f.empenho, f.notaFiscal, dataBR(f.dataPagamento), reais(f.valorPago), reais(semCobranca ? 0 : Math.max(0, r.valorTotal - f.valorPago)), f.obs,
+    ].map(csvCampo).join(";"); }));
   res.set({ "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": 'attachment; filename="inscricoes-treinamento-ibtech.csv"' });
   res.send("﻿" + linhas.join("\r\n")); // BOM para o Excel reconhecer os acentos
 }));

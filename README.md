@@ -18,6 +18,12 @@
 Sem `RESEND_API_KEY` e `EMAIL_FROM` o e-mail não é enviado e a inscrição funciona normalmente.
 Uma falha no envio aparece no log do Render e não impede a inscrição.
 
+## Painel: financeiro e e-mail
+- Cada inscrição tem situação financeira: Pendente, Empenhado, Pago, Isento ou Cancelado, com forma de pagamento, nº do empenho, nº da nota fiscal, data e valor pago (aceita pagamento parcial).
+- Totais no topo: valor previsto (sem isentos e cancelados), recebido e a receber. Filtro por situação e busca.
+- Coluna "E-mail de confirmação": mostra se o e-mail saiu ou o erro devolvido pela Resend, com botão para enviar de novo.
+- O CSV inclui todas as colunas financeiras e o saldo.
+
 ## Regras
 - Valor: R$ 400,00 por participante.
 - Inscrição duplicada: o mesmo órgão (mesmo CNPJ ou mesmo nome, sem diferenciar acentos e maiúsculas) com o mesmo e-mail de responsável em menos de 10 minutos é recusada.
