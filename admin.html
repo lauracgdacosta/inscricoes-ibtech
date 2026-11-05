@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Painel de inscrições – Ibtech</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap">
+<style>
+:root{--brand:#3f3e82;--dark:#2b2a5c;--accent:#e5c438;--bg:#f6f6fb;--line:#d9d9ea;--muted:#5e5d86}
+body{margin:0;background:var(--bg);color:var(--dark);font:15px/1.45 'Outfit',system-ui,sans-serif}
+.wrap{max-width:1200px;margin:0 auto;padding:20px 16px 48px}
+h1{margin:0 0 12px;font-size:28px;font-weight:600}
+.chips{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.chip{background:#fff;border:1px solid var(--line);border-radius:6px;padding:10px 16px}
+.chip b{display:block;font-size:28px;color:var(--brand);line-height:1.1}
+.chip span{font-size:13px;color:var(--muted)}
+a.btn,button{font:inherit;font-weight:600;background:var(--brand);color:#fff;border:0;border-radius:4px;padding:10px 16px;text-decoration:none;cursor:pointer;display:inline-block}
+button.del{background:#fff;color:#b3261e;border:1px solid #b3261e;padding:4px 10px;font-size:13px}
+.tw{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:6px;margin-top:14px}
+table{border-collapse:collapse;width:100%}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+</style></head><body><div class="wrap">
+<h1>Inscrições recebidas</h1>
+<div class="chips" id="chips"></div>
+<a class="btn" href="/admin/inscricoes.csv">Baixar planilha (CSV)</a>
+<div class="tw"><table><thead><tr><th>Recebida</th><th>Órgão</th><th>Responsável</th><th>Contato</th><th>Participantes</th><th>Total</th><th>Notebook</th><th>Obs.</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+</div>
+<script>
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const brl=n=>n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+async function load(){
+  let l;
+  try{const r=await fetch("/admin/api/inscricoes");if(!r.ok)throw 0;l=await r.json()}
+  catch{document.getElementById("rows").innerHTML='<tr><td colspan="9" style="color:#b3261e">Não foi possível carregar as inscrições. Recarregue a página.</td></tr>';return}
+  const pessoas=l.reduce((a,r)=>a+r.participantes.length,0),valor=l.reduce((a,r)=>a+r.valorTotal,0);
+  document.getElementById("chips").innerHTML=`<div class="chip"><b>${l.length}</b><span>órgãos inscritos</span></div><div class="chip"><b>${pessoas}</b><span>participantes</span></div><div class="chip"><b>${brl(valor)}</b><span>valor previsto</span></div>`;
+  document.getElementById("rows").innerHTML=l.length?l.map(r=>`<tr><td>${new Date(r.criadaEm).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"})}</td><td><b>${esc(r.orgao)}</b><br>${esc(r.tipo)} ${esc(r.cnpj)}</td><td>${esc(r.responsavel)}<br>${esc(r.cargo)}</td><td>${esc(r.email)}<br>${esc(r.telefone)}</td><td>${r.participantes.map(p=>esc(p.nome)+(p.cargo?" ("+esc(p.cargo)+")":"")).join("<br>")}</td><td>${brl(r.valorTotal)}</td><td>${esc(r.notebook)}</td><td>${esc(r.observacoes)}</td><td><button class="del" data-id="${r.id}">Excluir</button></td></tr>`).join(""):'<tr><td colspan="9" style="color:#5e5d86">Nenhuma inscrição recebida ainda.</td></tr>';
+}
+document.addEventListener("click",async e=>{const b=e.target.closest(".del");if(!b)return;if(b.dataset.s!=="1"){b.dataset.s="1";b.textContent="Confirmar exclusão";return}b.disabled=true;const r=await fetch("/admin/api/inscricoes/"+encodeURIComponent(b.dataset.id),{method:"DELETE"}).catch(()=>null);if(!r||!r.ok)alert("Não foi possível excluir. Tente novamente.");load()});
+load();
+</script></body></html>
