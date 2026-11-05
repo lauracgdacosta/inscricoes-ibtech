@@ -84,6 +84,7 @@ dialog label{display:grid;gap:4px;font-weight:500;font-size:14px}
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const brl=n=>Number(n||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const valorDe=n=>Math.floor(n/3)*1000+(n%3)*400; // mesma regra do server.js
 const dataBR=d=>d?d.split("-").reverse().join("/"):"";
 const hora=s=>new Date(s).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo",dateStyle:"short",timeStyle:"short"});
 const fin=r=>({situacao:"Pendente",forma:"",empenho:"",notaFiscal:"",dataPagamento:"",valorPago:0,obs:"",...(r.financeiro||{})});
@@ -136,7 +137,7 @@ function linha(r){
 <td><b class="org">${esc(r.orgao)}</b><div class="sub">${esc(r.tipo)} ${esc(r.cnpj)}</div></td>
 <td>${esc(r.responsavel)}<div class="sub">${esc(r.cargo)}<br>${esc(r.email)}<br>${esc(r.telefone)}</div></td>
 <td>${r.participantes.map(p=>esc(p.nome)+(p.cargo?' <span class="sub">('+esc(p.cargo)+")</span>":"")).join("<br>")}${r.notebook?`<div class="sub">Notebook: ${esc(r.notebook)}</div>`:""}${r.observacoes?`<div class="sub">Obs.: ${esc(r.observacoes)}</div>`:""}</td>
-<td class="num">${brl(r.valorTotal)}<div class="sub">${r.participantes.length} × R$ 400</div></td>
+<td class="num">${brl(r.valorTotal)}<div class="sub">${r.participantes.length} ${r.participantes.length===1?"participante":"participantes"}</div>${r.valorTotal!==valorDe(r.participantes.length)?`<div class="sub" title="Inscrição feita antes da mudança de preço">Pela tabela atual: ${brl(valorDe(r.participantes.length))}</div>`:""}</td>
 <td class="fin"><span class="badge b-${esc(f.situacao)}">${esc(f.situacao)}</span>${Number(f.valorPago)?`<div class="sub">Pago: ${brl(f.valorPago)}</div>`:""}${s&&Number(f.valorPago)?`<div class="sub">Saldo: ${brl(s)}</div>`:""}${detFin?`<div class="sub">${detFin}</div>`:""}${f.obs?`<div class="sub">${esc(f.obs)}</div>`:""}</td>
 <td>${em}</td>
 <td><div class="acoes"><button class="sec" data-fin="${esc(r.id)}">Financeiro</button>${cfg.emailAtivo?`<button class="sec" data-mail="${esc(r.id)}">${e&&e.situacao==="enviado"?"Reenviar e-mail":"Enviar e-mail"}</button>`:""}<button class="del" data-del="${esc(r.id)}">Excluir</button></div></td></tr>`;

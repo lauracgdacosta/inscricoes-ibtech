@@ -18,10 +18,12 @@ body{margin:0;background:var(--bg);color:var(--dark);font:16px/1.5 'Outfit',syst
 h1{margin:0;font-size:clamp(28px,6vw,42px);line-height:1.08;font-weight:600;text-wrap:balance}
 .chip{justify-self:start;background:var(--accent);color:var(--dark);font-weight:700;padding:6px 14px;border-radius:4px}
 .wrap{max-width:760px;margin:0 auto;padding:20px 16px 56px}
-.info{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:20px}
+.info{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.45fr);gap:12px;margin-bottom:20px}
 .info div{background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px 14px}
 .info small{display:block;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.info b{font-size:18px}
+.info b{font-size:18px;display:block}
+.nw{white-space:nowrap}
+.dica{margin:0;font-size:14px;color:var(--brand);font-weight:500}
 .prog{background:#fff;border:1px solid var(--line);border-radius:6px;padding:14px 16px;margin-bottom:20px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .prog h3{margin:0 0 4px;color:var(--brand)}
 .prog ul{margin:0;padding-left:18px;font-size:15px}
@@ -67,7 +69,7 @@ button:disabled{opacity:.5}
 <div class="info">
 <div><small>Datas</small><b>01 e 02/12/2026</b></div>
 <div><small>Cidade</small><b>Belo Horizonte</b></div>
-<div><small>Valor</small><b>R$ 400,00 por pessoa</b></div>
+<div><small>Valor</small><b>1 participante: <span class="nw">R$ 400,00</span></b><b>3 participantes: <span class="nw">R$ 1.000,00</span></b></div>
 </div>
 <p class="nota">A nota fiscal será gerada mediante a confirmação da inscrição.<span id="finTel" hidden> Dúvidas: fale com o nosso financeiro pelo número <a id="finTelLink"></a>.</span></p>
 <p style="margin:0 0 16px;color:var(--muted)">O local será definido e informado por e-mail a quem se inscrever. A inscrição vale para os dois dias e todos os temas.</p>
@@ -98,7 +100,8 @@ button:disabled{opacity:.5}
 <fieldset><legend>Participantes</legend>
 <div id="parts" style="display:grid;gap:10px"></div>
 <div><button type="button" class="alt" id="add">Adicionar participante</button></div>
-<div class="total"><span><span id="qtd">1</span> participante(s) × R$ 400,00</span><b id="tot">R$ 400,00</b></div>
+<div class="total"><span id="comp">1 participante × R$ 400,00</span><b id="tot">R$ 400,00</b></div>
+<p class="dica" id="dica" hidden></p>
 </fieldset>
 
 <fieldset><legend>Informações adicionais</legend>
@@ -115,6 +118,14 @@ button:disabled{opacity:.5}
 <script>
 const $=id=>document.getElementById(id);
 const brl=n=>n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+// Preço: cada grupo de 3 custa R$ 1.000; quem sobra paga R$ 400 (mesma regra do server.js).
+const valorDe=n=>Math.floor(n/3)*1000+(n%3)*400;
+function composicao(n){
+  const g=Math.floor(n/3),r=n%3,p=[];
+  if(g)p.push((g===1?"1 grupo":g+" grupos")+" de 3 × R$ 1.000,00");
+  if(r)p.push(r+(r===1?" participante":" participantes")+" × R$ 400,00");
+  return g?n+" participantes: "+p.join(" + "):p[0];
+}
 const emailOk=e=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 function row(){
   const d=document.createElement("div");d.className="part";
@@ -126,7 +137,9 @@ function row(){
 function upd(){
   const linhas=[...$("parts").children],n=linhas.length;
   linhas.forEach(d=>d.querySelector(".rm").hidden=n<2);
-  $("qtd").textContent=n;$("tot").textContent=brl(n*400);
+  $("comp").textContent=composicao(n);$("tot").textContent=brl(valorDe(n));
+  const d=$("dica");d.hidden=n%3!==2;
+  if(!d.hidden)d.textContent="Com mais 1 participante, vocês fecham um grupo de 3 por R$ 1.000,00: só "+brl(valorDe(n+1)-valorDe(n))+" a mais.";
 }
 $("add").onclick=()=>row().querySelector(".pn").focus();row();
 fetch("/api/info").then(r=>r.json()).then(i=>{const t=i.financeiroTelefone;if(!t)return;

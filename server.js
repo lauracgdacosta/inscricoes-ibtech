@@ -2,7 +2,17 @@ const express = require("express");
 const crypto = require("crypto");
 const path = require("path");
 
-const VALOR = 400; // R$ por pessoa
+// Preço: cada grupo de 3 participantes custa R$ 1.000; quem sobra paga R$ 400 por pessoa.
+// Ex.: 1 = 400, 2 = 800, 3 = 1.000, 4 = 1.400, 5 = 1.800, 6 = 2.000. Sem limite por órgão.
+// (A mesma regra está repetida em public/index.html e admin.html para exibição.)
+const VALOR = 400, GRUPO = 3, VALOR_GRUPO = 1000;
+const valorDe = n => Math.floor(n / GRUPO) * VALOR_GRUPO + (n % GRUPO) * VALOR;
+const composicao = n => {
+  const g = Math.floor(n / GRUPO), r = n % GRUPO, p = [];
+  if (g) p.push(`${g} × grupo de 3 (${brl(VALOR_GRUPO)})`);
+  if (r) p.push(`${r} × ${brl(VALOR)}`);
+  return p.join(" + ");
+};
 const JANELA_DUPLICADA_MIN = 10; // minutos
 const app = express();
 app.use(express.json({ limit: "50kb" }));
@@ -115,7 +125,7 @@ async function enviarConfirmacao(r) {
     `Participantes (${qtd}):`,
     ...lista.map(n => "- " + n),
     "",
-    `Valor total: ${brl(r.valorTotal)} (${qtd} × ${brl(VALOR)})`,
+    `Valor total: ${brl(r.valorTotal)} (${composicao(qtd)})`,
     "A nota fiscal será gerada mediante a confirmação da inscrição." + (financeiroTel() ? ` Dúvidas: fale com o nosso financeiro pelo número ${financeiroTel()}.` : ""),
     "",
     "O local do treinamento ainda será definido e será informado posteriormente por e-mail.",
@@ -129,7 +139,7 @@ async function enviarConfirmacao(r) {
 <p>Olá, ${html(r.responsavel)}.</p>
 <p>Recebemos a inscrição de <b>${html(r.orgao)}</b>.</p>
 <p><b>Participantes (${qtd}):</b><br>${lista.map(html).join("<br>")}</p>
-<p style="background:#e5c438;padding:10px 14px;font-size:16px"><b>Valor total: ${brl(r.valorTotal)}</b> (${qtd} × ${brl(VALOR)})</p>
+<p style="background:#e5c438;padding:10px 14px;font-size:16px"><b>Valor total: ${brl(r.valorTotal)}</b> (${composicao(qtd)})</p>
 <p style="font-size:14px;color:#5e5d86">A nota fiscal será gerada mediante a confirmação da inscrição.${financeiroTel() ? ` Dúvidas: fale com o nosso financeiro pelo número <b>${html(financeiroTel())}</b>.` : ""}</p>
 <p>O local do treinamento ainda será definido e será informado posteriormente por e-mail.</p>
 <p>Equipe Ibtech</p></div></div>`;
@@ -180,7 +190,7 @@ app.post("/api/inscricoes", limite, async (req, res) => {
       criadaEm: new Date().toISOString(),
       orgao: txt(b.orgao), tipo: txt(b.tipo, 40), cnpj: txt(b.cnpj, 25),
       responsavel: txt(b.responsavel), cargo: txt(b.cargo), email: txt(b.email, 120), telefone: txt(b.telefone, 30),
-      participantes, valorTotal: participantes.length * VALOR,
+      participantes, valorTotal: valorDe(participantes.length),
       notebook: txt(b.notebook, 20), observacoes: txt(b.observacoes, 1000),
     };
     if (!r.orgao || !r.responsavel || !r.cargo || !r.telefone) return res.status(400).json({ erro: "Preencha órgão, responsável, cargo e telefone." });
