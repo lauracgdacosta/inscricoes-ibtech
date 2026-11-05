@@ -35,7 +35,7 @@ Uma falha no envio aparece no log do Render e não impede a inscrição.
 3. Preencha as variáveis pedidas (veja a tabela acima).
 4. O endereço público aparece no painel do Render (ex.: https://inscricoes-ibtech.onrender.com).
 
-Observação: no plano gratuito o site "dorme" após 15 minutos sem uso e o primeiro acesso demora cerca de 1 minuto. O banco gratuito do Render expira 30 dias após a criação: baixe o CSV antes do evento.
+Observação: no plano gratuito o Render desliga o site após 15 minutos sem acesso. Para evitar isso, o próprio site acessa o seu endereço público (`/healthz`) a cada 10 minutos (auto-ping, ativo apenas no Render; para desligar, crie a variável `KEEPALIVE=off`). Se o Render reiniciar o serviço por manutenção, o primeiro acesso seguinte demora cerca de 1 minuto e o auto-ping volta a funcionar. O banco gratuito do Render expira 30 dias após a criação: baixe o CSV antes do evento.
 
 ## Testar no computador
 npm install && ADMIN_PASSWORD=teste npm start  (sem DATABASE_URL guarda em memória)

@@ -262,7 +262,25 @@ app.use((err, req, res, _next) => {
   res.status(500).json({ erro: "Erro interno. Tente novamente." });
 });
 
+// ---------- manter o site acordado no plano gratuito do Render ----------
+// O Render desliga o serviço gratuito após 15 min sem acessos externos. Acessar o próprio
+// endereço público a cada 10 min conta como acesso. RENDER_EXTERNAL_URL é preenchida pelo
+// próprio Render; fora dele (ou com KEEPALIVE=off) nada é feito.
+function manterAcordado() {
+  const base = process.env.RENDER_EXTERNAL_URL;
+  if (!base || process.env.KEEPALIVE === "off") return;
+  setInterval(() => {
+    fetch(base + "/healthz", { signal: AbortSignal.timeout(30000) })
+      .then(r => { if (!r.ok) console.warn("Auto-ping respondeu", r.status); })
+      .catch(e => console.warn("Auto-ping falhou:", e.message));
+  }, 10 * 60e3);
+  console.log("Auto-ping ativo: " + base + "/healthz a cada 10 minutos");
+}
+
 const PORT = process.env.PORT || 3000;
 store.init()
-  .then(() => app.listen(PORT, () => console.log("Rodando na porta " + PORT + (emailAtivo() ? " (e-mail de confirmação ativo)" : " (e-mail de confirmação desativado)"))))
+  .then(() => app.listen(PORT, () => {
+    console.log("Rodando na porta " + PORT + (emailAtivo() ? " (e-mail de confirmação ativo)" : " (e-mail de confirmação desativado)"));
+    manterAcordado();
+  }))
   .catch(e => { console.error("Não foi possível conectar ao banco:", e.message); process.exit(1); });
