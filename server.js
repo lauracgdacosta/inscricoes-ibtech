@@ -152,7 +152,7 @@ async function enviarConfirmacao(r) {
 <p style="font-size:14px;color:#5e5d86">A nota fiscal será gerada em breve. Dúvidas: fale com o nosso financeiro pelo número <b>(31) 98787-4278</b>.</p>
 <p>O local do treinamento ainda será definido e será informado posteriormente por e-mail.</p>
 <p>Equipe Ibtech</p></div></div>`;
-  const msg = { from: process.env.EMAIL_FROM, to: [r.email], subject: "Inscrição recebida – Treinamento Ibtech 01 e 02/12/2026", text: texto, html: corpo };
+  const msg = { from: process.env.EMAIL_FROM, to: [r.email], subject: "Inscrição recebida – Treinamento Ibtech 01 e 02/12/2026 (Não responda)", text: texto, html: corpo };
   if (process.env.EMAIL_REPLY_TO) msg.reply_to = process.env.EMAIL_REPLY_TO;
   const resp = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -283,6 +283,70 @@ app.get("/admin/participantes.csv", admin, seguro(async (_q, res) => {
     linhas.push([p.nome, p.email, p.cargo, r.orgao, r.cnpj, finDe(r).situacao].map(csvCampo).join(";"));
   res.set({ "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": 'attachment; filename="participantes-treinamento-ibtech.csv"' });
   res.send("﻿" + linhas.join("\r\n"));
+}));
+
+// Planilha Excel (.xlsx) com duas abas: inscrições (com financeiro) e participantes.
+app.get("/admin/inscricoes.xlsx", admin, seguro(async (_q, res) => {
+  const ExcelJS = require("exceljs");
+  const lista = await store.list();
+  const semFormula = s => String(s ?? ""); // no .xlsx o texto é gravado como texto, nunca como fórmula
+  const dataDe = d => d ? new Date(d + "T12:00:00") : null;
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "Ibtech";
+
+  const estilizar = (ws) => {
+    const cab = ws.getRow(1);
+    cab.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    cab.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF3F3E82" } };
+    cab.alignment = { vertical: "middle" };
+    ws.views = [{ state: "frozen", ySplit: 1 }];
+    ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: ws.columnCount } };
+  };
+  const moeda = { numFmt: '"R$" #,##0.00' };
+
+  const wsI = wb.addWorksheet("Inscrições");
+  wsI.columns = [
+    { header: "Recebida", key: "criada", width: 18, style: { numFmt: "dd/mm/yyyy hh:mm" } },
+    { header: "Órgão", key: "orgao", width: 34 }, { header: "Tipo", key: "tipo", width: 14 },
+    { header: "CNPJ", key: "cnpj", width: 20 }, { header: "Responsável", key: "responsavel", width: 26 },
+    { header: "Cargo", key: "cargo", width: 20 }, { header: "E-mail", key: "email", width: 28 },
+    { header: "Telefone", key: "telefone", width: 16 }, { header: "Participantes", key: "participantes", width: 50 },
+    { header: "Qtd", key: "qtd", width: 6 }, { header: "Valor total", key: "valor", width: 14, style: moeda },
+    { header: "Notebook", key: "notebook", width: 10 }, { header: "Observações", key: "obs", width: 30 },
+    { header: "Situação", key: "situacao", width: 12 }, { header: "Forma de pagamento", key: "forma", width: 18 },
+    { header: "Nº empenho", key: "empenho", width: 14 }, { header: "Nº nota fiscal", key: "nf", width: 14 },
+    { header: "Data do pagamento", key: "dataPag", width: 16, style: { numFmt: "dd/mm/yyyy" } },
+    { header: "Valor pago", key: "pago", width: 14, style: moeda }, { header: "Saldo", key: "saldo", width: 14, style: moeda },
+    { header: "Obs. financeiras", key: "obsFin", width: 30 },
+  ];
+  for (const r of lista) {
+    const f = finDe(r); const semCobranca = f.situacao === "Isento" || f.situacao === "Cancelado";
+    // horário de Brasília como "data local" no Excel
+    const criada = new Date(new Date(r.criadaEm).getTime() - 3 * 3600 * 1000);
+    wsI.addRow({
+      criada, orgao: semFormula(r.orgao), tipo: semFormula(r.tipo), cnpj: semFormula(r.cnpj), responsavel: semFormula(r.responsavel),
+      cargo: semFormula(r.cargo), email: semFormula(r.email), telefone: semFormula(r.telefone),
+      participantes: semFormula(r.participantes.map(p => `${p.nome}${p.cargo ? " (" + p.cargo + ")" : ""}${p.email ? " <" + p.email + ">" : ""}`).join(" | ")),
+      qtd: r.participantes.length, valor: Number(r.valorTotal || 0), notebook: semFormula(r.notebook), obs: semFormula(r.observacoes),
+      situacao: f.situacao, forma: f.forma, empenho: semFormula(f.empenho), nf: semFormula(f.notaFiscal), dataPag: dataDe(f.dataPagamento),
+      pago: Number(f.valorPago || 0), saldo: semCobranca ? 0 : Math.max(0, r.valorTotal - f.valorPago), obsFin: semFormula(f.obs),
+    });
+  }
+  estilizar(wsI);
+
+  const wsP = wb.addWorksheet("Participantes");
+  wsP.columns = [
+    { header: "Nome completo", key: "nome", width: 34 }, { header: "E-mail", key: "email", width: 30 },
+    { header: "Cargo", key: "cargo", width: 22 }, { header: "Órgão", key: "orgao", width: 34 },
+    { header: "CNPJ", key: "cnpj", width: 20 }, { header: "Situação financeira", key: "situacao", width: 18 },
+  ];
+  for (const r of lista.filter(r => finDe(r).situacao !== "Cancelado").reverse())
+    for (const p of r.participantes)
+      wsP.addRow({ nome: semFormula(p.nome), email: semFormula(p.email), cargo: semFormula(p.cargo), orgao: semFormula(r.orgao), cnpj: semFormula(r.cnpj), situacao: finDe(r).situacao });
+  estilizar(wsP);
+
+  res.set({ "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Content-Disposition": 'attachment; filename="inscricoes-treinamento-ibtech.xlsx"' });
+  res.send(Buffer.from(await wb.xlsx.writeBuffer()));
 }));
 
 app.get("/healthz", (_q, res) => res.send("ok"));
