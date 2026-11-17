@@ -153,7 +153,7 @@ function upd(){
   if(!d.hidden)d.textContent="Com mais 1 participante, vocês fecham um grupo de 3 por R$ 1.000,00: só "+brl(valorDe(n+1)-valorDe(n))+" a mais.";
 }
 $("add").onclick=()=>row().querySelector(".pn").focus();row();
-fetch("/api/info").then(r=>r.json()).then(i=>{const t=i.financeiroTelefone;if(!t)return;
+fetch("api/info").then(r=>r.json()).then(i=>{const t=i.financeiroTelefone;if(!t)return;
   const a=$("finTelLink");a.textContent=t;a.href="tel:"+t.replace(/[^\d+]/g,"");$("finTel").hidden=false}).catch(()=>{});
 function msg(t,k){const m=$("msg");m.hidden=false;m.className="msg "+k;m.textContent=t;m.scrollIntoView({behavior:"smooth",block:"center"})}
 function invalido(el,t){msg(t,"err");el.focus();return true}
@@ -182,7 +182,7 @@ $("f").addEventListener("submit",async e=>{
   $("send").disabled=true;$("send").textContent="Enviando...";
   try{
     let r,j;
-    try{r=await fetch("/api/inscricoes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});j=await r.json()}
+    try{r=await fetch("api/inscricoes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});j=await r.json()}
     catch{throw new Error("Não foi possível enviar. Verifique sua conexão e tente novamente.")}
     if(!r.ok)throw new Error(j.erro||"Não foi possível registrar. Tente novamente.");
     $("f").reset();$("parts").innerHTML="";row();

@@ -55,7 +55,7 @@ dialog label{display:grid;gap:4px;font-weight:500;font-size:14px}
 .erro{color:var(--err);font-size:14px}
 @media(max-width:620px){.g2{grid-template-columns:1fr}.filtros input{margin-left:0;min-width:0}}
 </style></head><body><div class="wrap">
-<div class="head"><h1>Inscrições recebidas</h1><div class="botoes"><a class="btn" href="/admin/inscricoes.xlsx">Exportar para Excel</a><a class="btn alt" href="/admin/inscricoes.csv">Baixar planilha (CSV)</a><a class="btn alt" href="/admin/participantes.csv">Lista de participantes (certificados)</a></div></div>
+<div class="head"><h1>Inscrições recebidas</h1><div class="botoes"><a class="btn" href="admin/inscricoes.xlsx">Exportar para Excel</a><a class="btn alt" href="admin/inscricoes.csv">Baixar planilha (CSV)</a><a class="btn alt" href="admin/participantes.csv">Lista de participantes (certificados)</a></div></div>
 <div id="aviso"></div>
 <div class="chips" id="chips"></div>
 <div class="filtros" id="filtros"></div>
@@ -97,7 +97,7 @@ let lista=[],cfg={situacoes:["Pendente","Empenhado","Pago","Isento","Cancelado"]
 async function api(url,opt){const r=await fetch(url,opt);let j={};try{j=await r.json()}catch{}if(!r.ok)throw new Error(j.erro||"Erro "+r.status);return j}
 
 async function load(){
-  try{[lista,cfg]=await Promise.all([api("/admin/api/inscricoes"),api("/admin/api/config")])}
+  try{[lista,cfg]=await Promise.all([api("admin/api/inscricoes"),api("admin/api/config")])}
   catch{$("rows").innerHTML='<tr><td colspan="8" class="em-err">Não foi possível carregar as inscrições. Recarregue a página.</td></tr>';return}
   $("aviso").innerHTML=cfg.emailAtivo
     ?`<div class="aviso">E-mail de confirmação <b>ativo</b>. Remetente: ${esc(cfg.remetente)}</div>`
@@ -164,7 +164,7 @@ $("ff").addEventListener("submit",async e=>{
   e.preventDefault();
   const body={situacao:$("fSit").value,forma:$("fForma").value,empenho:$("fEmp").value,notaFiscal:$("fNF").value,dataPagamento:$("fData").value,valorPago:Number($("fValor").value||0),obs:$("fObs").value};
   $("fSalvar").disabled=true;
-  try{const j=await api("/admin/api/inscricoes/"+encodeURIComponent(atual.id)+"/financeiro",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  try{const j=await api("admin/api/inscricoes/"+encodeURIComponent(atual.id)+"/financeiro",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
     atual.financeiro=j.financeiro;$("dlg").close();render()}
   catch(err){$("fErro").textContent=err.message;$("fErro").hidden=false}
   $("fSalvar").disabled=false;
@@ -177,14 +177,14 @@ document.addEventListener("click",async e=>{
   if(t.dataset.fin){abrir(t.dataset.fin);return}
   if(t.dataset.mail){
     t.disabled=true;t.textContent="Enviando...";
-    try{await api("/admin/api/inscricoes/"+encodeURIComponent(t.dataset.mail)+"/reenviar-email",{method:"POST"});}
+    try{await api("admin/api/inscricoes/"+encodeURIComponent(t.dataset.mail)+"/reenviar-email",{method:"POST"});}
     catch(err){alert("Não foi possível enviar: "+err.message)}
     load();return;
   }
   if(t.dataset.del){
     if(t.dataset.s!=="1"){t.dataset.s="1";t.textContent="Confirmar exclusão";return}
     t.disabled=true;
-    try{await api("/admin/api/inscricoes/"+encodeURIComponent(t.dataset.del),{method:"DELETE"})}catch{alert("Não foi possível excluir. Tente novamente.")}
+    try{await api("admin/api/inscricoes/"+encodeURIComponent(t.dataset.del),{method:"DELETE"})}catch{alert("Não foi possível excluir. Tente novamente.")}
     load();
   }
 });

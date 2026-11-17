@@ -1,3 +1,6 @@
 node_modules/
 .env
 backup-*.json
+publicar-kinghost/
+kinghost/config.php
+kinghost/dados/

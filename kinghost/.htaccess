@@ -1,0 +1,15 @@
+DirectoryIndex index.html
+Options -Indexes
+AddDefaultCharset utf-8
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # Repassa a senha do painel ao PHP (necessário quando o PHP roda como CGI/FastCGI)
+  RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+  # Arquivos que não podem ser baixados
+  RewriteRule ^(config\.php|config\.exemplo\.php|admin\.html|backup-.*\.json)$ - [F,L]
+  RewriteRule ^dados(/|$) - [F,L]
+  # Tudo que não for arquivo existente vai para o app.php
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^ app.php [L,QSA]
+</IfModule>

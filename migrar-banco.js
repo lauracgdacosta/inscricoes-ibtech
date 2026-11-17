@@ -4,7 +4,9 @@
 //   node migrar-banco.js <origem> [destino]
 //
 // <origem>  = URL do banco antigo (postgres://...) OU um arquivo backup-*.json gerado antes.
-// [destino] = URL do banco novo. Se omitido, usa DATABASE_URL do .env.
+// [destino] = URL do banco novo, OU o endereço do site novo em PHP (https://...), que recebe
+//             os dados pelo painel (precisa de ADMIN_PASSWORD com a senha do painel do site novo).
+//             Se omitido, usa DATABASE_URL do .env.
 //             Use "-" para apenas gerar o arquivo de backup, sem gravar em lugar nenhum.
 //
 // Sempre grava um backup-AAAA-MM-DD-HHMM.json com todas as inscrições lidas.
@@ -64,6 +66,23 @@ async function gravarDestino(linhas) {
   } finally { await c.end(); }
 }
 
+// Destino = endereço do site novo (versão PHP): envia para /admin/api/importar com a senha do painel.
+async function enviarSite(linhas) {
+  const senha = process.env.ADMIN_PASSWORD;
+  if (!senha) throw new Error("Defina ADMIN_PASSWORD (senha do painel do site novo) para enviar ao site.");
+  const url = destino.replace(/\/+$/, "") + "/admin/api/importar";
+  console.log("Enviando para " + url);
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: "Basic " + Buffer.from("migracao:" + senha).toString("base64") },
+    body: JSON.stringify(linhas),
+  });
+  const t = await r.text();
+  if (!r.ok) throw new Error(`O site respondeu ${r.status}: ${t.slice(0, 300)}`);
+  const j = JSON.parse(t);
+  console.log(`Recebidas ${j.recebidas}, novas ${j.novas} (as demais já existiam).`);
+}
+
 (async () => {
   const linhas = await lerOrigem();
   console.log(`Encontradas ${linhas.length} inscrições.`);
@@ -74,5 +93,6 @@ async function gravarDestino(linhas) {
     console.log("Backup salvo em " + arq);
   }
   if (!destino || destino === "-") return console.log("Sem destino: nada gravado (apenas backup).");
+  if (/^https?:\/\//i.test(destino)) return enviarSite(linhas);
   await gravarDestino(linhas);
 })().catch(e => { console.error("ERRO: " + e.message); process.exit(1); });

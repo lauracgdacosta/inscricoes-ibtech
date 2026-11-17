@@ -39,13 +39,14 @@ Uma falha no envio aparece no log do Render e não impede a inscrição.
 
 Observação: no plano gratuito o Render desliga o site após 15 minutos sem acesso. Para evitar isso, o próprio site acessa o seu endereço público (`/healthz`) a cada 10 minutos (auto-ping, ativo apenas no Render; para desligar, crie a variável `KEEPALIVE=off`). Se o Render reiniciar o serviço por manutenção, o primeiro acesso seguinte demora cerca de 1 minuto e o auto-ping volta a funcionar. O banco gratuito do Render expira 30 dias após a criação: baixe o CSV antes do evento.
 
-## Publicar na KingHost
-1. Painel KingHost > domínio > **Banco de dados** > criar um **PostgreSQL** (anote servidor, nome, usuário e senha).
-2. Painel > **NODE.JS** > **Nova aplicação**: Node 18 ou mais novo, script de inicialização `server.js`. A porta é atribuída pela KingHost e chega como `PORT_SERVER` (o código já lê).
-3. Envie os arquivos do projeto (sem `node_modules`) para a pasta da aplicação (FTP ou SSH) e rode `npm install` lá.
-4. Copie `.env.exemplo` para `.env` na mesma pasta e preencha (`DATABASE_SSL=off` para o Postgres da KingHost).
-5. Copie os dados do banco antigo: `node migrar-banco.js "<URL externa do banco do Render>"` (grava no `DATABASE_URL` do `.env` e salva um `backup-*.json`).
-6. Reinicie a aplicação pelo painel (não use `node server.js` direto: a KingHost gerencia com PM2).
+## Publicar na KingHost (hospedagem PHP, sem Node)
+A pasta `kinghost/` tem a versão PHP do servidor (`app.php`), com as mesmas regras, páginas e painel. Funciona com MySQL, PostgreSQL ou SQLite (PHP 7.4+, extensões pdo, curl e zip).
+1. Painel KingHost > **Banco de dados** > criar um **MySQL** (anote servidor, nome, usuário e senha).
+2. `node kinghost/montar.js` cria a pasta `publicar-kinghost/`. Preencha nela o `config.php` (senha do painel, banco, Resend).
+3. Envie o conteúdo de `publicar-kinghost/` por FTP para a pasta do site (ex.: `www/inscricoes`).
+4. Copie as inscrições antigas: `ADMIN_PASSWORD=<senha do painel novo> node migrar-banco.js "<URL externa do banco do Render>" https://<endereço do site novo>` (também salva um `backup-*.json`).
+
+A versão Node (`server.js`) continua funcionando para Render/hospedagens com Node (porta `PORT` ou `PORT_SERVER`, variáveis por ambiente ou arquivo `.env`).
 
 ## Testar no computador
 npm install && ADMIN_PASSWORD=teste npm start  (sem DATABASE_URL guarda em memória)
