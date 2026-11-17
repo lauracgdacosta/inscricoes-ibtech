@@ -39,5 +39,13 @@ Uma falha no envio aparece no log do Render e não impede a inscrição.
 
 Observação: no plano gratuito o Render desliga o site após 15 minutos sem acesso. Para evitar isso, o próprio site acessa o seu endereço público (`/healthz`) a cada 10 minutos (auto-ping, ativo apenas no Render; para desligar, crie a variável `KEEPALIVE=off`). Se o Render reiniciar o serviço por manutenção, o primeiro acesso seguinte demora cerca de 1 minuto e o auto-ping volta a funcionar. O banco gratuito do Render expira 30 dias após a criação: baixe o CSV antes do evento.
 
+## Publicar na KingHost
+1. Painel KingHost > domínio > **Banco de dados** > criar um **PostgreSQL** (anote servidor, nome, usuário e senha).
+2. Painel > **NODE.JS** > **Nova aplicação**: Node 18 ou mais novo, script de inicialização `server.js`. A porta é atribuída pela KingHost e chega como `PORT_SERVER` (o código já lê).
+3. Envie os arquivos do projeto (sem `node_modules`) para a pasta da aplicação (FTP ou SSH) e rode `npm install` lá.
+4. Copie `.env.exemplo` para `.env` na mesma pasta e preencha (`DATABASE_SSL=off` para o Postgres da KingHost).
+5. Copie os dados do banco antigo: `node migrar-banco.js "<URL externa do banco do Render>"` (grava no `DATABASE_URL` do `.env` e salva um `backup-*.json`).
+6. Reinicie a aplicação pelo painel (não use `node server.js` direto: a KingHost gerencia com PM2).
+
 ## Testar no computador
 npm install && ADMIN_PASSWORD=teste npm start  (sem DATABASE_URL guarda em memória)

@@ -1,6 +1,8 @@
 const express = require("express");
 const crypto = require("crypto");
 const path = require("path");
+require("./env").carregar(path.join(__dirname, ".env"));
+const { opcoesBanco } = require("./env");
 
 // Preço: cada grupo de 3 participantes custa R$ 1.000; quem sobra paga R$ 400 por pessoa.
 // Ex.: 1 = 400, 2 = 800, 3 = 1.000, 4 = 1.400, 5 = 1.800, 6 = 2.000. Sem limite por órgão.
@@ -22,10 +24,7 @@ app.use(express.static(path.join(__dirname, "public")));
 let store;
 if (process.env.DATABASE_URL) {
   const { Pool } = require("pg");
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DATABASE_URL.includes("localhost") ? false : { rejectUnauthorized: false },
-  });
+  const pool = new Pool(opcoesBanco(process.env.DATABASE_URL, process.env.DATABASE_SSL));
   store = {
     async init() {
       await pool.query(`CREATE TABLE IF NOT EXISTS inscricoes (
@@ -374,7 +373,8 @@ function manterAcordado() {
   console.log("Auto-ping ativo: " + base + "/healthz a cada 10 minutos");
 }
 
-const PORT = process.env.PORT || 3000;
+// Render usa PORT; a KingHost usa PORT_<NOME DO SCRIPT> (server.js -> PORT_SERVER).
+const PORT = process.env.PORT || process.env.PORT_SERVER || 3000;
 store.init()
   .then(() => app.listen(PORT, () => {
     console.log("Rodando na porta " + PORT + (emailAtivo() ? " (e-mail de confirmação ativo)" : " (e-mail de confirmação desativado)"));
