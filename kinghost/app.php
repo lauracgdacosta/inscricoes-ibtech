@@ -328,6 +328,7 @@ $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
 try {
   if ($caminho === '/healthz') { echo 'ok'; exit; }
+  if ($caminho === '/' || $caminho === '/index.php') { header('Content-Type: text/html; charset=utf-8'); readfile(__DIR__ . '/index.html'); exit; }
 
   if ($caminho === '/api/info' && $metodo === 'GET') { responder(200, ['financeiroTelefone' => txt(cfg('FINANCEIRO_TELEFONE'), 40)]); exit; }
 
