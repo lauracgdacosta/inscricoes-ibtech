@@ -149,7 +149,7 @@ async function enviarConfirmacao(r) {
 <p><b>Participantes (${qtd}):</b><br>${lista.map(html).join("<br>")}</p>
 <p style="background:#e5c438;padding:10px 14px;font-size:16px"><b>Valor total: ${brl(r.valorTotal)}</b> (${composicao(qtd)})</p>
 <p style="font-size:14px;color:#5e5d86">A nota fiscal será gerada em breve. Dúvidas: fale com o nosso financeiro pelo número <b>(31) 98787-4278</b>.</p>
-<p><b>📍 Localização:</b> Rua Rio Grande do Norte, 1436, sala 1305, Bairro Savassi, Belo Horizonte, MG</p>
+<p style="border:2px solid #3f3e82;border-left-width:6px;padding:12px 14px;font-size:18px"><b style="color:#3f3e82">📍 Localização:</b> Rua Rio Grande do Norte, 1436, sala 1305, Bairro Savassi, Belo Horizonte, MG</p>
 <p>Equipe Ibtech</p></div></div>`;
   const msg = { from: process.env.EMAIL_FROM, to: [r.email], subject: "Inscrição recebida – Treinamento Ibtech 01 e 02/12/2026 (Não responda)", text: texto, html: corpo };
   if (process.env.EMAIL_REPLY_TO) msg.reply_to = process.env.EMAIL_REPLY_TO;
