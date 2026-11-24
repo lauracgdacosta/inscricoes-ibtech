@@ -73,7 +73,8 @@ button:disabled{opacity:.5}
 <div><small>Valor</small><b>1 participante: <span class="nw">R$ 400,00</span></b><b>3 participantes: <span class="nw">R$ 1.000,00</span></b></div>
 </div>
 <p class="nota">A nota fiscal será gerada mediante a confirmação da inscrição.<span id="finTel" hidden> Dúvidas: fale com o nosso financeiro pelo número <a id="finTelLink"></a>.</span></p>
-<p style="margin:0 0 16px;color:var(--muted)">O local será definido e informado por e-mail a quem se inscrever. A inscrição vale para os dois dias e todos os temas.</p>
+<p style="margin:0 0 8px"><b>📍 Localização:</b> Rua Rio Grande do Norte, 1436, sala 1305, Bairro Savassi, Belo Horizonte, MG</p>
+<p style="margin:0 0 16px;color:var(--muted)">A inscrição vale para os dois dias e todos os temas.</p>
 
 <div class="prog">
 <div><h3>01/12</h3><ul><li>09h às 12h: Contabilidade</li><li>13h (1 hora): Apresentação do Sistema de Custos e do projeto piloto de Anchieta</li><li>14h às 17h: Gestão de Materiais e Processos</li></ul></div>
@@ -186,7 +187,7 @@ $("f").addEventListener("submit",async e=>{
     catch{throw new Error("Não foi possível enviar. Verifique sua conexão e tente novamente.")}
     if(!r.ok)throw new Error(j.erro||"Não foi possível registrar. Tente novamente.");
     $("f").reset();$("parts").innerHTML="";row();
-    msg("Inscrição recebida! "+j.participantes+" participante(s), valor total de "+brl(j.valorTotal)+". "+(j.emailConfirmacao?"Enviamos uma confirmação para "+body.email+". ":"")+"O local do treinamento será informado posteriormente por e-mail.","ok");
+    msg("Inscrição recebida! "+j.participantes+" participante(s), valor total de "+brl(j.valorTotal)+". "+(j.emailConfirmacao?"Enviamos uma confirmação para "+body.email+". ":"")+"Local: Rua Rio Grande do Norte, 1436, sala 1305, Savassi, Belo Horizonte, MG.","ok");
   }catch(err){msg(err.message,"err")}
   $("send").disabled=false;$("send").textContent="Enviar inscrição";
 });
