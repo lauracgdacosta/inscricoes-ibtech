@@ -48,10 +48,9 @@ h1{margin:0;font-size:clamp(28px,6vw,42px);line-height:1.08;font-weight:600;text
 
 <div class="wrap">
 <div class="aviso">
-<h2>As inscrições foram encerradas</h2>
-<p>Obrigado pelo interesse! O prazo de inscrição para este treinamento terminou e não estamos mais recebendo inscrições por esta página.</p>
-<p>Quem já se inscreveu está confirmado e recebeu a confirmação por e-mail. Esperamos você no local e nas datas abaixo.</p>
-<p id="contato" hidden>Dúvidas: fale com a equipe Ibtech pelo número <a id="tel"></a>.</p>
+<h2>As inscrições foram encerradas!</h2>
+<p>Para quem se inscreveu, esperamos vocês no local e nas datas abaixo.</p>
+<p>Até lá!</p>
 </div>
 
 <div class="info">
@@ -66,9 +65,5 @@ h1{margin:0;font-size:clamp(28px,6vw,42px);line-height:1.08;font-weight:600;text
 </div>
 </div>
 
-<script>
-fetch("api/info").then(r=>r.json()).then(i=>{const t=i.financeiroTelefone;if(!t)return;
-  const a=document.getElementById("tel");a.textContent=t;a.href="tel:"+t.replace(/[^\d+]/g,"");document.getElementById("contato").hidden=false}).catch(()=>{});
-</script>
 </body>
 </html>
