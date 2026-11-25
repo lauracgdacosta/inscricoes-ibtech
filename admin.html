@@ -23,7 +23,7 @@ h1{margin:0;font-size:28px;font-weight:600}
 .filtros input{margin-left:auto;min-width:220px}
 a.btn,button{font:inherit;font-weight:600;background:var(--brand);color:#fff;border:0;border-radius:4px;padding:10px 16px;text-decoration:none;cursor:pointer;display:inline-block}
 .botoes{display:flex;gap:8px;flex-wrap:wrap}
-a.btn.alt{background:#fff;color:var(--brand);border:1px solid var(--brand)}
+a.btn.alt,button.btn.alt{background:#fff;color:var(--brand);border:1px solid var(--brand)}
 button.sec{background:#fff;color:var(--brand);border:1px solid var(--brand);padding:4px 10px;font-size:13px}
 button.del{background:#fff;color:var(--err);border:1px solid var(--err);padding:4px 10px;font-size:13px}
 button:disabled{opacity:.5;cursor:default}
@@ -55,7 +55,7 @@ dialog label{display:grid;gap:4px;font-weight:500;font-size:14px}
 .erro{color:var(--err);font-size:14px}
 @media(max-width:620px){.g2{grid-template-columns:1fr}.filtros input{margin-left:0;min-width:0}}
 </style></head><body><div class="wrap">
-<div class="head"><h1>Inscrições recebidas</h1><div class="botoes"><a class="btn" href="admin/inscricao">Nova inscrição</a><a class="btn alt" href="admin/inscricoes.xlsx">Exportar para Excel</a><a class="btn alt" href="admin/inscricoes.csv">Baixar planilha (CSV)</a><a class="btn alt" href="admin/participantes.csv">Lista de participantes (certificados)</a></div></div>
+<div class="head"><h1>Inscrições recebidas</h1><div class="botoes"><a class="btn" href="admin/inscricao">Nova inscrição</a><a class="btn alt" href="admin/inscricoes.xlsx">Exportar para Excel</a><button type="button" class="btn alt" id="pdf" title="Baixa em PDF as inscrições do filtro e da busca atuais">Exportar PDF</button><a class="btn alt" href="admin/inscricoes.csv">Baixar planilha (CSV)</a><a class="btn alt" href="admin/participantes.csv">Lista de participantes (certificados)</a></div></div>
 <div id="aviso"></div>
 <div class="chips" id="chips"></div>
 <div class="filtros" id="filtros"></div>
@@ -188,5 +188,62 @@ document.addEventListener("click",async e=>{
     load();
   }
 });
+// ---------- exportação para PDF (gerado no navegador; exporta o que está filtrado na tela) ----------
+function carregaScript(src){return new Promise((ok,falha)=>{const s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=()=>falha(new Error("Não foi possível carregar o gerador de PDF. Verifique a internet."));document.head.appendChild(s)})}
+function logoDataUrl(){return new Promise(ok=>{const i=new Image();i.onload=()=>{try{const c=document.createElement("canvas");c.width=i.naturalWidth;c.height=i.naturalHeight;c.getContext("2d").drawImage(i,0,0);ok({url:c.toDataURL("image/png"),w:i.naturalWidth,h:i.naturalHeight})}catch{ok(null)}};i.onerror=()=>ok(null);i.src="logo.png"})}
+async function exportarPdf(){
+  const b=$("pdf");b.disabled=true;const txtBotao=b.textContent;b.textContent="Gerando PDF...";
+  try{
+    if(!window.jspdf){
+      await carregaScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+      await carregaScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js");
+    }
+    const q=busca.trim().toLowerCase();
+    const vis=lista.filter(r=>(filtro==="Todas"||fin(r).situacao===filtro)&&(!q||[r.orgao,r.cnpj,r.responsavel,r.email,fin(r).empenho,fin(r).notaFiscal].join(" ").toLowerCase().includes(q)));
+    if(!vis.length)throw new Error("Não há inscrições neste filtro para exportar.");
+    const doc=new window.jspdf.jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
+    const W=doc.internal.pageSize.getWidth(),M=12,roxo=[63,62,130],amarelo=[229,196,56];
+    let y=M;
+    const logo=await logoDataUrl();
+    if(logo){const h=12,w=Math.min(60,h*logo.w/logo.h);doc.addImage(logo.url,"PNG",M,y,w,h);y+=h+4}
+    doc.setFont("helvetica","bold");doc.setFontSize(15);doc.setTextColor(...roxo);
+    doc.text("Treinamento Ibtech 2026 – Relatório de inscrições",M,y+5);
+    doc.setFont("helvetica","normal");doc.setFontSize(9);doc.setTextColor(94,93,134);
+    const filtroTxt=[filtro!=="Todas"&&"Situação: "+filtro,q&&'Busca: "'+busca.trim()+'"'].filter(Boolean).join(" · ");
+    doc.text("Gerado em "+new Date().toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo",dateStyle:"short",timeStyle:"short"})+(filtroTxt?" · "+filtroTxt:" · Todas as inscrições"),M,y+11);
+    y+=15;
+    // resumo (mesmas contas dos quadros do painel, sobre as inscrições exportadas)
+    const ativos=vis.filter(r=>fin(r).situacao!=="Cancelado");
+    const resumo=[["Órgãos inscritos",String(ativos.length)],["Participantes",String(ativos.reduce((a,r)=>a+r.participantes.length,0))],
+      ["Valor previsto",brl(vis.reduce((a,r)=>a+(semCobranca(fin(r))?0:r.valorTotal),0))],["Recebido",brl(ativos.reduce((a,r)=>a+Number(fin(r).valorPago||0),0))],["A receber",brl(vis.reduce((a,r)=>a+saldo(r),0))]];
+    const cw=(W-2*M-4*4)/5;
+    resumo.forEach(([t,v],i)=>{const x=M+i*(cw+4);doc.setDrawColor(217,217,234);doc.setFillColor(255,255,255);doc.roundedRect(x,y,cw,14,1.5,1.5,"FD");
+      doc.setFillColor(...amarelo);doc.rect(x,y,1.5,14,"F");
+      doc.setFont("helvetica","bold");doc.setFontSize(12);doc.setTextColor(43,42,92);doc.text(v,x+5,y+6.5);
+      doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(94,93,134);doc.text(t.toUpperCase(),x+5,y+11)});
+    y+=20;
+    const linhas=vis.map(r=>{const f=fin(r),s=saldo(r);
+      return [hora(r.criadaEm),
+        r.orgao+"\n"+[r.tipo,r.cnpj].filter(Boolean).join(" · "),
+        [r.responsavel,r.cargo,r.email,r.telefone].filter(Boolean).join("\n"),
+        r.participantes.map(p=>p.nome+(p.cargo?" ("+p.cargo+")":"")).join("\n"),
+        brl(r.valorTotal)+"\n"+r.participantes.length+(r.participantes.length===1?" particip.":" particip."),
+        [f.situacao,f.forma,f.empenho&&"Empenho "+f.empenho,f.notaFiscal&&"NF "+f.notaFiscal,f.dataPagamento&&"Pago em "+dataBR(f.dataPagamento)].filter(Boolean).join("\n"),
+        brl(f.valorPago),brl(s)]});
+    doc.autoTable({startY:y,margin:{left:M,right:M,bottom:14},
+      head:[["Recebida","Órgão","Responsável","Participantes","Total","Financeiro","Pago","Saldo"]],body:linhas,
+      styles:{font:"helvetica",fontSize:8,cellPadding:1.8,textColor:[43,42,92],lineColor:[217,217,234],lineWidth:.2,valign:"top"},
+      headStyles:{fillColor:roxo,textColor:255,fontStyle:"bold"},alternateRowStyles:{fillColor:[246,246,251]},
+      columnStyles:{0:{cellWidth:20},1:{cellWidth:44,fontStyle:"bold"},2:{cellWidth:46},3:{cellWidth:"auto"},4:{cellWidth:22,halign:"right"},5:{cellWidth:32},6:{cellWidth:20,halign:"right"},7:{cellWidth:20,halign:"right"}},
+      didParseCell:d=>{if(d.section==="body"&&fin(vis[d.row.index]).situacao==="Cancelado"){d.cell.styles.textColor=[150,150,170];d.cell.styles.fontStyle="normal"}}});
+    const n=doc.internal.getNumberOfPages(),H=doc.internal.pageSize.getHeight();
+    for(let i=1;i<=n;i++){doc.setPage(i);doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(94,93,134);
+      doc.text("Inscrições – Treinamento Ibtech 2026",M,H-6);doc.text("Página "+i+" de "+n,W-M,H-6,{align:"right"})}
+    const hoje=new Date().toLocaleDateString("sv-SE",{timeZone:"America/Sao_Paulo"});
+    doc.save("inscricoes-treinamento-ibtech-"+hoje+".pdf");
+  }catch(err){alert(err.message)}
+  b.disabled=false;b.textContent=txtBotao;
+}
+$("pdf").addEventListener("click",exportarPdf);
 load();
 </script></body></html>
