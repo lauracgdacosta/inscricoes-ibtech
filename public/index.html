@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Inscrição – Treinamento Ibtech 2026</title>
+<title>Inscrições encerradas – Treinamento Ibtech 2026</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap">
 <style>
-:root{--brand:#3f3e82;--dark:#2b2a5c;--accent:#e5c438;--bg:#f6f6fb;--line:#d9d9ea;--muted:#5e5d86;--err:#b3261e;--ok:#1d7a4a}
+:root{--brand:#3f3e82;--dark:#2b2a5c;--accent:#e5c438;--bg:#f6f6fb;--line:#d9d9ea;--muted:#5e5d86}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--dark);font:16px/1.5 'Outfit',system-ui,sans-serif}
 .top{background:#fff;border-bottom:4px solid var(--accent)}
@@ -18,181 +18,57 @@ body{margin:0;background:var(--bg);color:var(--dark);font:16px/1.5 'Outfit',syst
 h1{margin:0;font-size:clamp(28px,6vw,42px);line-height:1.08;font-weight:600;text-wrap:balance}
 .chip{justify-self:start;background:var(--accent);color:var(--dark);font-weight:700;padding:6px 14px;border-radius:4px}
 .wrap{max-width:760px;margin:0 auto;padding:20px 16px 56px}
-.info{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.45fr);gap:12px;margin-bottom:20px}
+.aviso{background:#fff;border:2px solid var(--brand);border-left-width:6px;border-radius:6px;padding:18px 20px;margin-bottom:20px}
+.aviso h2{margin:0 0 6px;color:var(--brand);font-size:24px;font-weight:600}
+.aviso p{margin:0}
+.aviso p+p{margin-top:8px}
+.aviso a{color:var(--brand);font-weight:600;white-space:nowrap}
+.info{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px}
 .info div{background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px 14px}
 .info small{display:block;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .info b{font-size:18px;display:block}
-.nw{white-space:nowrap}
-.aviso-cert{margin:0;font-size:14px;color:var(--muted)}
-.dica{margin:0;font-size:14px;color:var(--brand);font-weight:500}
-.prog{background:#fff;border:1px solid var(--line);border-radius:6px;padding:14px 16px;margin-bottom:20px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.local{margin:0 0 20px;padding:14px 16px;background:#fff;border:1px solid var(--line);border-radius:6px;font-size:17px}
+.local b{color:var(--brand)}
+.prog{background:#fff;border:1px solid var(--line);border-radius:6px;padding:14px 16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .prog h3{margin:0 0 4px;color:var(--brand)}
 .prog ul{margin:0;padding-left:18px;font-size:15px}
-fieldset{border:1px solid var(--line);background:#fff;border-radius:6px;padding:16px;margin:0 0 18px;display:grid;gap:12px;min-width:0}
-legend{font-weight:600;color:var(--brand);padding:0 6px}
-label{display:grid;gap:4px;font-weight:500;min-width:0}
-input,select,textarea{font:inherit;color:var(--dark);background:#fff;border:1px solid var(--line);border-radius:4px;padding:10px 12px;width:100%;min-width:0}
-textarea{min-height:80px;resize:vertical}
-:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
-.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.part{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.4fr) minmax(0,2fr) auto;gap:8px;align-items:end}
-.part button{padding:10px 12px}
-button{font:inherit;font-weight:600;border:0;border-radius:4px;padding:12px 22px;background:var(--brand);color:#fff;cursor:pointer}
-button.alt{background:#fff;color:var(--brand);border:1px solid var(--brand)}
-button:disabled{opacity:.5}
-.total{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:var(--accent);border-radius:6px;padding:12px 16px;font-weight:600}
-.total b{font-size:24px}
-.nota{margin:-8px 0 16px;padding:10px 14px;border-left:4px solid var(--accent);background:#fffbe8;border-radius:0 4px 4px 0;font-size:14px;color:var(--dark)}
-.local{margin:0 0 12px;padding:14px 16px;background:#fff;border:2px solid var(--brand);border-left-width:6px;border-radius:6px;font-size:19px;line-height:1.4;color:var(--dark)}
-.local b{color:var(--brand)}
-.nota a{color:var(--brand);font-weight:600;white-space:nowrap}
-.hp{position:absolute;left:-9999px}
-.msg{padding:12px 14px;border-radius:4px;border:1px solid var(--line);background:#fff;margin-top:14px}
-.msg.err{border-color:var(--err);color:var(--err)}
-.msg.ok{border-color:var(--ok);color:var(--ok)}
-.part [hidden]{display:none}
 @media(max-width:620px){
-  .info,.prog,.row{grid-template-columns:minmax(0,1fr)}
-  .part{grid-template-columns:minmax(0,1fr);padding-bottom:12px;border-bottom:1px dashed var(--line)}
-  .part button{justify-self:start}
+  .info,.prog{grid-template-columns:minmax(0,1fr)}
   .top img{height:38px}
   .top .tag{font-size:11px}
-  #send{width:100%}
 }
 </style>
 </head>
 <body>
 <div class="top"><div class="in"><img src="logo.png" alt="Ibtech" onerror="this.style.display='none'"><div class="tag">Clientes sistema Web</div></div></div>
 <div class="hero"><div class="in">
-<div class="chip">Inscrição</div>
+<div class="chip">Inscrições encerradas</div>
 <h1>Treinamento presencial Ibtech: encerramento do exercício 2026 e preparação para 2027</h1>
 </div></div>
 
 <div class="wrap">
+<div class="aviso">
+<h2>As inscrições foram encerradas</h2>
+<p>Obrigado pelo interesse! O prazo de inscrição para este treinamento terminou e não estamos mais recebendo inscrições por esta página.</p>
+<p>Quem já se inscreveu está confirmado e recebeu a confirmação por e-mail. Esperamos você no local e nas datas abaixo.</p>
+<p id="contato" hidden>Dúvidas: fale com a equipe Ibtech pelo número <a id="tel"></a>.</p>
+</div>
+
 <div class="info">
 <div><small>Datas</small><b>01 e 02/12/2026</b></div>
 <div><small>Cidade</small><b>Belo Horizonte</b></div>
-<div><small>Valor</small><b>1 participante: <span class="nw">R$ 400,00</span></b><b>3 participantes: <span class="nw">R$ 1.000,00</span></b></div>
 </div>
-<p class="nota">A nota fiscal será gerada mediante a confirmação da inscrição.<span id="finTel" hidden> Dúvidas: fale com o nosso financeiro pelo número <a id="finTelLink"></a>.</span></p>
 <p class="local"><b>📍 Localização:</b> Rua Rio Grande do Norte, 1436, sala 1305, Bairro Savassi, Belo Horizonte, MG</p>
-<p style="margin:0 0 16px;color:var(--muted)">A inscrição vale para os dois dias e todos os temas.</p>
 
 <div class="prog">
 <div><h3>01/12</h3><ul><li>09h às 12h: Contabilidade</li><li>13h (1 hora): Apresentação do Sistema de Custos e do projeto piloto de Anchieta</li><li>14h às 17h: Gestão de Materiais e Processos</li></ul></div>
 <div><h3>02/12</h3><ul><li>09h às 12h: Mudanças no SICOM para 2027, todos os módulos</li><li>14h às 17h: Folha de pagamento, conferência de dados do eSocial para a "DIRF" 2027</li></ul></div>
 </div>
-
-<form id="f" novalidate>
-<fieldset><legend>Órgão</legend>
-<label>Nome do órgão<input id="orgao" required autocomplete="organization"></label>
-<div class="row">
-<label>Tipo<select id="tipo"><option>Prefeitura</option><option>Câmara</option><option>Instituto de previdência</option><option>Consórcio</option><option>Outro</option></select></label>
-<label>CNPJ<input id="cnpj" inputmode="numeric" required maxlength="18" placeholder="00.000.000/0000-00"></label>
-</div></fieldset>
-
-<fieldset><legend>Responsável pela inscrição</legend>
-<div class="row">
-<label>Nome<input id="responsavel" required autocomplete="name"></label>
-<label>Cargo<input id="cargo" required></label>
-</div>
-<div class="row">
-<label>E-mail<input id="email" type="email" required autocomplete="email"></label>
-<label>Telefone com DDD<input id="telefone" type="tel" required autocomplete="tel"></label>
-</div></fieldset>
-
-<fieldset><legend>Participantes</legend>
-<p class="aviso-cert">O <b>nome completo</b> e o <b>e-mail</b> de cada participante são obrigatórios para a emissão do certificado. Confira a grafia: o nome sairá no certificado exatamente como for digitado.</p>
-<div id="parts" style="display:grid;gap:10px"></div>
-<div><button type="button" class="alt" id="add">Adicionar participante</button></div>
-<div class="total"><span id="comp">1 participante × R$ 400,00</span><b id="tot">R$ 400,00</b></div>
-<p class="dica" id="dica" hidden></p>
-</fieldset>
-
-<fieldset><legend>Informações adicionais</legend>
-<label>Vai levar notebook?<select id="notebook"><option>Sim</option><option>Não</option><option>Ainda não sei</option></select></label>
-<label>Dúvidas, temas que gostaria de ver ou observações<textarea id="observacoes"></textarea></label>
-</fieldset>
-
-<input class="hp" id="site" tabindex="-1" autocomplete="off" aria-hidden="true">
-<button type="submit" id="send">Enviar inscrição</button>
-<div id="msg" class="msg" hidden role="status"></div>
-</form>
 </div>
 
 <script>
-const $=id=>document.getElementById(id);
-const brl=n=>n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-// Preço: cada grupo de 3 custa R$ 1.000; quem sobra paga R$ 400 (mesma regra do server.js).
-const valorDe=n=>Math.floor(n/3)*1000+(n%3)*400;
-function composicao(n){
-  const g=Math.floor(n/3),r=n%3,p=[];
-  if(g)p.push((g===1?"1 grupo":g+" grupos")+" de 3 × R$ 1.000,00");
-  if(r)p.push(r+(r===1?" participante":" participantes")+" × R$ 400,00");
-  return g?n+" participantes: "+p.join(" + "):p[0];
-}
-const emailOk=e=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
-function cnpjOk(c){ // 14 dígitos com dígitos verificadores corretos (mesma regra do server.js)
-  const d=c.replace(/\D/g,"");if(d.length!==14||/^(\d)\1+$/.test(d))return false;
-  const dv=n=>{let s=0,p=n-7;for(let i=0;i<n;i++){s+=+d[i]*p--;if(p<2)p=9}const r=s%11;return r<2?0:11-r};
-  return dv(12)===+d[12]&&dv(13)===+d[13];
-}
-$("cnpj").addEventListener("input",e=>{ // formata enquanto digita: 00.000.000/0000-00
-  const d=e.target.value.replace(/\D/g,"").slice(0,14);
-  e.target.value=d.replace(/^(\d{2})(\d)/,"$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3").replace(/\.(\d{3})(\d)/,".$1/$2").replace(/(\d{4})(\d)/,"$1-$2");
-});
-function row(){
-  const d=document.createElement("div");d.className="part";
-  d.innerHTML='<label>Nome completo<input class="pn" autocomplete="off" required></label><label>Cargo (opcional)<input class="pc"></label><label>E-mail<input class="pe" type="email" required></label><button type="button" class="alt rm">Remover</button>';
-  d.querySelector(".rm").onclick=()=>{d.remove();upd()};
-  $("parts").appendChild(d);upd();
-  return d;
-}
-function upd(){
-  const linhas=[...$("parts").children],n=linhas.length;
-  linhas.forEach(d=>d.querySelector(".rm").hidden=n<2);
-  $("comp").textContent=composicao(n);$("tot").textContent=brl(valorDe(n));
-  const d=$("dica");d.hidden=n%3!==2;
-  if(!d.hidden)d.textContent="Com mais 1 participante, vocês fecham um grupo de 3 por R$ 1.000,00: só "+brl(valorDe(n+1)-valorDe(n))+" a mais.";
-}
-$("add").onclick=()=>row().querySelector(".pn").focus();row();
 fetch("api/info").then(r=>r.json()).then(i=>{const t=i.financeiroTelefone;if(!t)return;
-  const a=$("finTelLink");a.textContent=t;a.href="tel:"+t.replace(/[^\d+]/g,"");$("finTel").hidden=false}).catch(()=>{});
-function msg(t,k){const m=$("msg");m.hidden=false;m.className="msg "+k;m.textContent=t;m.scrollIntoView({behavior:"smooth",block:"center"})}
-function invalido(el,t){msg(t,"err");el.focus();return true}
-function validar(){
-  for(const[id,nome]of[["orgao","o nome do órgão"],["responsavel","o nome do responsável"],["cargo","o cargo do responsável"],["email","o e-mail do responsável"],["telefone","o telefone"]])
-    if(!$(id).value.trim())return invalido($(id),"Preencha "+nome+".");
-  if(!$("cnpj").value.trim())return invalido($("cnpj"),"Preencha o CNPJ do órgão.");
-  if(!cnpjOk($("cnpj").value))return invalido($("cnpj"),"CNPJ inválido. Confira os números.");
-  if(!emailOk($("email").value.trim()))return invalido($("email"),"Confira o e-mail do responsável.");
-  let i=0;
-  for(const d of $("parts").children){
-    i++;
-    const pn=d.querySelector(".pn"),pe=d.querySelector(".pe"),quem=pn.value.trim()||"participante "+i;
-    if(!pn.value.trim())return invalido(pn,"Preencha o nome completo do participante "+i+" ou remova a linha vazia.");
-    if(pn.value.trim().split(/\s+/).length<2)return invalido(pn,"Informe o nome completo (nome e sobrenome) de "+quem+". Ele será usado no certificado.");
-    if(!pe.value.trim())return invalido(pe,"Preencha o e-mail de "+quem+". Ele é necessário para o certificado.");
-    if(!emailOk(pe.value.trim()))return invalido(pe,"Confira o e-mail de "+quem+".");
-  }
-  return false;
-}
-$("f").addEventListener("submit",async e=>{
-  e.preventDefault();
-  if(validar())return;
-  const participantes=[...$("parts").children].map(d=>({nome:d.querySelector(".pn").value,cargo:d.querySelector(".pc").value,email:d.querySelector(".pe").value}));
-  const body={orgao:$("orgao").value,tipo:$("tipo").value,cnpj:$("cnpj").value,responsavel:$("responsavel").value,cargo:$("cargo").value,email:$("email").value.trim(),telefone:$("telefone").value,participantes,notebook:$("notebook").value,observacoes:$("observacoes").value,site:$("site").value};
-  $("send").disabled=true;$("send").textContent="Enviando...";
-  try{
-    let r,j;
-    try{r=await fetch("api/inscricoes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});j=await r.json()}
-    catch{throw new Error("Não foi possível enviar. Verifique sua conexão e tente novamente.")}
-    if(!r.ok)throw new Error(j.erro||"Não foi possível registrar. Tente novamente.");
-    $("f").reset();$("parts").innerHTML="";row();
-    msg("Inscrição recebida! "+j.participantes+" participante(s), valor total de "+brl(j.valorTotal)+". "+(j.emailConfirmacao?"Enviamos uma confirmação para "+body.email+". ":"")+"Local: Rua Rio Grande do Norte, 1436, sala 1305, Savassi, Belo Horizonte, MG.","ok");
-  }catch(err){msg(err.message,"err")}
-  $("send").disabled=false;$("send").textContent="Enviar inscrição";
-});
+  const a=document.getElementById("tel");a.textContent=t;a.href="tel:"+t.replace(/[^\d+]/g,"");document.getElementById("contato").hidden=false}).catch(()=>{});
 </script>
 </body>
 </html>

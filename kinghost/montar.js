@@ -9,6 +9,7 @@ const arquivos = {
   "app.php": "kinghost/app.php",
   ".htaccess": "kinghost/.htaccess",
   "admin.html": "admin.html",
+  "inscricao.html": "inscricao.html",
   "index.html": "public/index.html",
   "logo.png": "public/logo.png",
 };

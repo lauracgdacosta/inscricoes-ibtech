@@ -332,10 +332,17 @@ try {
 
   if ($caminho === '/api/info' && $metodo === 'GET') { responder(200, ['financeiroTelefone' => txt(cfg('FINANCEIRO_TELEFONE'), 40)]); exit; }
 
-  if ($caminho === '/api/inscricoes' && $metodo === 'POST') {
+  // Inscrições públicas encerradas: só a administração (com senha) registra novas, pela página /admin/inscricao.
+  if ($caminho === '/api/inscricoes' && $metodo === 'POST') erro(403, 'As inscrições foram encerradas.');
+
+  // ---------- painel ----------
+  if ($caminho === '/admin/') { header('Location: ' . $base . '/admin', true, 301); exit; }
+  if (strpos($caminho, '/admin') === 0) admin();
+  if ($caminho === '/admin/inscricao' && $metodo === 'GET') { header('Content-Type: text/html; charset=utf-8'); readfile(__DIR__ . '/inscricao.html'); exit; }
+  if ($caminho === '/admin/api/info' && $metodo === 'GET') { responder(200, ['financeiroTelefone' => txt(cfg('FINANCEIRO_TELEFONE'), 40)]); exit; }
+
+  if ($caminho === '/admin/api/inscricoes' && $metodo === 'POST') {
     $b = corpoJson();
-    if (!empty($b['site'])) { responder(200, ['ok' => true]); exit; } // campo isca contra robôs
-    limite();
     $ps = [];
     foreach (array_slice(is_array($b['participantes'] ?? null) ? $b['participantes'] : [], 0, 30) as $p) {
       $p = is_array($p) ? $p : [];
@@ -372,10 +379,7 @@ try {
     exit;
   }
 
-  // ---------- painel ----------
-  if ($caminho === '/admin/') { header('Location: ' . $base . '/admin', true, 301); exit; }
   if (strpos($caminho, '/admin') === 0) {
-    admin();
     if ($caminho === '/admin' && $metodo === 'GET') { header('Content-Type: text/html; charset=utf-8'); readfile(__DIR__ . '/admin.html'); exit; }
     if ($caminho === '/admin/api/inscricoes' && $metodo === 'GET') { responder(200, lista()); exit; }
     if ($caminho === '/admin/api/config' && $metodo === 'GET') {
